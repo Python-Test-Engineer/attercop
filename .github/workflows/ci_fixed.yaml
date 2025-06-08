@@ -131,8 +131,8 @@ jobs:
       - name: Lint and format with Ruff
         run: |
           source .venv/bin/activate
-          ruff check attercop/
-          ruff format --check attercop/
+          ruff check
+          ruff format --check
       - name: Type check with Pyright
         run: |
           source .venv/bin/activate
