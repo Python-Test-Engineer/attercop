@@ -432,16 +432,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
       - name: Update versions
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
-          sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" calculator/__init__.py
+          python -c "
+          import re
+          import os
+
+          version = os.environ['GITHUB_REF'].split('/')[-1][1:]  # Remove 'v' prefix
+          print(f'Updating to version: {version}')
+
+          # Update pyproject.toml
+          with open('pyproject.toml', 'r') as f:
+              content = f.read()
+          content = re.sub(r'version = \"[^\"]*\"', f'version = \"{version}\"', content)
+          with open('pyproject.toml', 'w') as f:
+              f.write(content)
+          print('Updated pyproject.toml')
+
+          # Update __version__ in calculator/__init__.py
+          with open('calculator/__init__.py', 'r') as f:
+              content = f.read()
+          content = re.sub(r'__version__ = \"[^\"]*\"', f'__version__ = \"{version}\"', content)
+          with open('calculator/__init__.py', 'w') as f:
+              f.write(content)
+          print('Updated calculator/__init__.py')
+          "
 
       - name: Commit changes
         run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Update version to $VERSION"
-          git push
