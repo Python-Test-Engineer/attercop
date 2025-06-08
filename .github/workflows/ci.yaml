@@ -432,23 +432,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Update version files
-        env:
-          NEXT_VERSION: 2.5.0
-          BUILD_NUMBER: ${{ github.run_number }}
-          COMMIT_SHA: ${{ github.sha }}
+      - name: Generate output files
         run: |
-          python update_version.py
+          mkdir -p outputs
 
-      # - name: Commit changes
-      #   run: |
-      #     git config --local user.email "action@github.com"
-      #     git config --local user.name "GitHub Action"
-      #     git add .
-      #     git commit -m "Update version to ${{ needs.semantic_release.outputs.next-version }}"
-      #     git push
+          # Version info
+          echo "Version: ${{ github.ref_name }}" > outputs/version.txt
+          echo "Build: ${{ github.run_number }}" >> outputs/version.txt
+          echo "Date: $(date)" >> outputs/version.txt
+
+          # JSON format
+          cat > outputs/build-info.json << EOF
+          {
+            "version": "${{ github.ref_name }}",
+            "build_number": "${{ github.run_number }}",
+            "commit": "${{ github.sha }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+          # Environment file
+          cat > outputs/.env << EOF
+          VERSION=${{ github.ref_name }}
+          BUILD_NUMBER=${{ github.run_number }}
+          COMMIT_SHA=${{ github.sha }}
+          EOF
+
+      - name: Upload all output files
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs
+          path: outputs/
