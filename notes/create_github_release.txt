@@ -1,0 +1,145 @@
+create_release:
+    name: Create GitHub Release
+    needs: [semantic_release]  # Assuming this gets the version from previous job
+    runs-on: ubuntu-latest
+
+    # Only run if there's a new version to release
+    if: needs.semantic_release.outputs.next-version != needs.semantic_release.outputs.current-version
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install GitPython
+
+      - name: Generate release notes
+        id: release_notes
+        env:
+          NEXT_VERSION: ${{ needs.semantic_release.outputs.next-version }}
+          CURRENT_VERSION: ${{ needs.semantic_release.outputs.current-version }}
+        run: |
+          python << 'EOF'
+          import os
+          import subprocess
+          from git import Repo
+          from datetime import datetime
+
+          def get_commits_since_tag(repo, last_tag, next_version):
+              """Get commits since last tag and categorize them"""
+              try:
+                  if last_tag == "v0.0.0":
+                      commits = list(repo.iter_commits())
+                  else:
+                      commits = list(repo.iter_commits(f'{last_tag}..HEAD'))
+              except:
+                  commits = list(repo.iter_commits())
+
+              features = []
+              fixes = []
+              breaking = []
+              other = []
+
+              for commit in commits:
+                  message = commit.message.strip()
+                  first_line = message.split('\n')[0]
+
+                  if ('breaking change' in message.lower() or
+                      first_line.lower().startswith('feat!:') or
+                      first_line.lower().startswith('fix!:') or
+                      '!' in first_line.split(':')[0] if ':' in first_line else False):
+                      breaking.append(f"- {first_line}")
+                  elif first_line.lower().startswith('feat:'):
+                      features.append(f"- {first_line[5:].strip()}")
+                  elif first_line.lower().startswith('fix:'):
+                      fixes.append(f"- {first_line[4:].strip()}")
+                  else:
+                      other.append(f"- {first_line}")
+
+              return features, fixes, breaking, other
+
+          def generate_release_notes(next_version, current_version, features, fixes, breaking, other):
+              """Generate formatted release notes"""
+              notes = f"# Release {next_version}\n\n"
+
+              if breaking:
+                  notes += "## 💥 Breaking Changes\n"
+                  notes += "\n".join(breaking) + "\n\n"
+
+              if features:
+                  notes += "## ✨ New Features\n"
+                  notes += "\n".join(features) + "\n\n"
+
+              if fixes:
+                  notes += "## 🐛 Bug Fixes\n"
+                  notes += "\n".join(fixes) + "\n\n"
+
+              if other:
+                  notes += "## 📝 Other Changes\n"
+                  notes += "\n".join(other) + "\n\n"
+
+              notes += f"**Full Changelog**: https://github.com/${{{{ github.repository }}}}/compare/{current_version}...{next_version}\n"
+
+              return notes
+
+          # Generate release notes
+          repo = Repo('.')
+          next_version = os.environ['NEXT_VERSION']
+          current_version = os.environ['CURRENT_VERSION']
+
+          features, fixes, breaking, other = get_commits_since_tag(repo, current_version, next_version)
+          release_notes = generate_release_notes(next_version, current_version, features, fixes, breaking, other)
+
+          print("Generated release notes:")
+          print(release_notes)
+
+          # Write to file for GitHub Actions
+          with open('release_notes.md', 'w') as f:
+              f.write(release_notes)
+
+          # Set output for next step
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              # Escape newlines for GitHub Actions
+              escaped_notes = release_notes.replace('\n', '\\n').replace('\r', '\\r')
+              f.write(f"release_notes={escaped_notes}\n")
+          EOF
+
+      - name: Create Git Tag
+        env:
+          NEXT_VERSION: ${{ needs.semantic_release.outputs.next-version }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag -a "$NEXT_VERSION" -m "Release $NEXT_VERSION"
+          git push origin "$NEXT_VERSION"
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.semantic_release.outputs.next-version }}
+          release_name: Release ${{ needs.semantic_release.outputs.next-version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets (Optional)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/  # Adjust path to your build artifacts
+          asset_name: release-artifacts.zip
+          asset_content_type: application/zip
+        # Only run if you have artifacts to upload
+        if: false  # Change to true if you want to upload artifacts
