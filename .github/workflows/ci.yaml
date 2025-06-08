@@ -439,7 +439,7 @@ jobs:
 
       - name: Update version files
         env:
-          NEXT_VERSION: ${{ needs.semantic_release.outputs.next-version }}
+          NEXT_VERSION: 2.5.0
           BUILD_NUMBER: ${{ github.run_number }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
