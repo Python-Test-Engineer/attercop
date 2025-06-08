@@ -124,7 +124,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   semantic_release:
-    name: Get Next Version with Python Semantic Release
+    name: Get Next Version
     needs: [test, security, codeql, scan]
     runs-on: ubuntu-latest
 
