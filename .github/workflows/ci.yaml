@@ -268,7 +268,7 @@ jobs:
           echo "Current version: ${{ steps.version.outputs.current-version }}"
           echo "Next version: ${{ steps.version.outputs.next-version }}"
           if [ "${{ steps.version.outputs.current-version }}" != "${{ steps.version.outputs.next-version }}" ]; then
-            echo "Version will be bumped!"
+            echo "✅ Version will be bumped!"
           else
             echo "No version bump needed"
           fi
@@ -428,7 +428,7 @@ jobs:
 
   update-version:
     name: Update app and pyproject.toml with new version
-    needs: create_release
+    needs: [create_release, semantic_release]  # Add semantic_release to needs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -436,38 +436,30 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.x'
 
       - name: Update versions
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          python -c "
-          import re
-          import os
-
-          version = os.environ['GITHUB_REF'].split('/')[-1][1:]  # Remove 'v' prefix
-          print(f'Updating to version: {version}')
+          echo "Updating to version: ${{ needs.semantic_release.outputs.next-version }}"
 
           # Update pyproject.toml
+          python -c "
+          import re
           with open('pyproject.toml', 'r') as f:
               content = f.read()
-          content = re.sub(r'version = \"[^\"]*\"', f'version = \"{version}\"', content)
+          content = re.sub(r'version = \"[^\"]*\"', 'version = \"${{ needs.semantic_release.outputs.next-version }}\"', content)
           with open('pyproject.toml', 'w') as f:
               f.write(content)
           print('Updated pyproject.toml')
-
-          # Update __version__ in calculator/__init__.py
-          with open('src/calculator/__init__.py', 'r') as f:
-              content = f.read()
-          content = re.sub(r'__version__ = \"[^\"]*\"', f'__version__ = \"{version}\"', content)
-          with open('src/calculator/__init__.py', 'w') as f:
-              f.write(content)
-          print('Updated calculator/__init__.py')
           "
 
-      # - name: Commit changes
-      #   run: |
-      #     VERSION=${GITHUB_REF#refs/tags/v}
-      #     git config --local user.email "action@github.com"
-      #     git config --local user.name "GitHub Action"
-      #     git add .
+          # Update __version__ in src/calculator/__init__.py
+          python -c "
+          import re
+          with open('src/calculator/__init__.py', 'r') as f:
+              content = f.read()
+          content = re.sub(r'__version__ = \"[^\"]*\"', '__version__ = \"${{ needs.semantic_release.outputs.next-version }}\"', content)
+          with open('src/calculator/__init__.py', 'w') as f:
+              f.write(content)
+          print('Updated src/calculator/__init__.py')
+          "
