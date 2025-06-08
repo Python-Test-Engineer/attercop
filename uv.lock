@@ -6,6 +6,7 @@ requires-python = ">=3.10"
 name = "attercop"
 source = { editable = "." }
 dependencies = [
+    { name = "black" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "ruff" },
@@ -22,6 +23,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "black", specifier = ">=25.1.0" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.0.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=6.0.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.12.0" },
