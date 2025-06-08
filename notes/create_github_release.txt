@@ -6,6 +6,10 @@ create_release:
     # Only run if there's a new version to release
     if: needs.semantic_release.outputs.next-version != needs.semantic_release.outputs.current-version
 
+    permissions:
+      contents: write  # Required for creating releases and pushing tags
+      pull-requests: write  # Required for some release operations
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -115,31 +119,32 @@ create_release:
       - name: Create Git Tag
         env:
           NEXT_VERSION: ${{ needs.semantic_release.outputs.next-version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git tag -a "$NEXT_VERSION" -m "Release $NEXT_VERSION"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git push origin "$NEXT_VERSION"
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        id: create_release
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.semantic_release.outputs.next-version }}
-          release_name: Release ${{ needs.semantic_release.outputs.next-version }}
+          name: Release ${{ needs.semantic_release.outputs.next-version }}
           body_path: release_notes.md
           draft: false
           prerelease: false
 
       - name: Upload Release Assets (Optional)
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/  # Adjust path to your build artifacts
-          asset_name: release-artifacts.zip
-          asset_content_type: application/zip
+          tag_name: ${{ needs.semantic_release.outputs.next-version }}
+          files: ./dist/*  # Adjust path to your build artifacts
         # Only run if you have artifacts to upload
         if: false  # Change to true if you want to upload artifacts
