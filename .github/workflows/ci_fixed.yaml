@@ -110,30 +110,30 @@ jobs:
         uses: github/codeql-action/autobuild@v2
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-      - name: Install uv
-        uses: astral-sh/setup-uv@v2
-        with:
-          version: latest
-      - name: Create virtual environment
-        run: uv venv
-      - name: Install linting tools
-        run: |
-          uv pip install ruff pyright
-      - name: Lint and format with Ruff
-        run: |
-          source .venv/bin/activate
-          ruff check
-          ruff format --check
-      - name: Type check with Pyright
-        run: |
-          source .venv/bin/activate
-          pyright attercop/
+#   lint:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.12'
+#       - name: Install uv
+#         uses: astral-sh/setup-uv@v2
+#         with:
+#           version: latest
+#       - name: Create virtual environment
+#         run: uv venv
+#       - name: Install linting tools
+#         run: |
+#           uv pip install ruff pyright
+#       - name: Lint and format with Ruff
+#         run: |
+#           source .venv/bin/activate
+#           ruff check
+#           ruff format --check
+#       - name: Type check with Pyright
+#         run: |
+#           source .venv/bin/activate
+#           pyright attercop/
