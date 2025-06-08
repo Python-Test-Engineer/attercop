@@ -123,7 +123,8 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  semantic_release:
+
+semantic_release:
     name: Get Next Version
     needs: [test, security, codeql, scan]
     runs-on: ubuntu-latest
@@ -146,7 +147,7 @@ jobs:
       - name: Get next version
         run: |
           echo "Getting next version..."
-          NEXT_VERSION=$(semantic-release version --print)
+          NEXT_VERSION=$(semantic-release next-version)
           echo "Next version: $NEXT_VERSION"
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
