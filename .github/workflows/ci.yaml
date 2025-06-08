@@ -427,7 +427,7 @@ jobs:
 
 
   update-version:
-    needs: semantic_release
+    needs: create_release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
