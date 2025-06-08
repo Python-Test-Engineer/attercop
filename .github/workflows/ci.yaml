@@ -114,7 +114,7 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
   scan:
-    name: gitleaks
+    name: Check GitLeaks for Secrets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
