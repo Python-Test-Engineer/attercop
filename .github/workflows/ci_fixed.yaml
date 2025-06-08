@@ -3,13 +3,7 @@ name: CI/CD Pipeline
   push:
     branches:
       - main
-      - develop
-  pull_request:
-    branches:
-      - main
-      - develop
-    types: [opened, synchronize, reopened]
-  workflow_dispatch: null
+
 
 # Prevent duplicate runs for PR pushes
 concurrency:
