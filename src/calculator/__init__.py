@@ -2,7 +2,7 @@
 
 from .calculator import Calculator
 
-__version__ = "1.17.0"
+__version__ = "1"
 
 
 __all__ = ["Calculator"]
