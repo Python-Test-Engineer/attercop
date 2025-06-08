@@ -427,6 +427,8 @@ jobs:
 
 
   update-version:
+    name: Update app and pyproject.toml with new version
+    needs: create_release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
