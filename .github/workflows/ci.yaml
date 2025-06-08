@@ -458,7 +458,7 @@ jobs:
           import re
           with open('src/calculator/__init__.py', 'r') as f:
               content = f.read()
-          content = re.sub(r'__version__ = \"[^\"]*\"', '__version__ = \"${{ needs.semantic_release.outputs.next-version }}\"', content)
+          content = re.sub(r'__version__ = \"[^\"]*\"', '__version__ = \"2.5.0\"', content)
           with open('src/calculator/__init__.py', 'w') as f:
               f.write(content)
           print('Updated src/calculator/__init__.py')
