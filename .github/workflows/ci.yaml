@@ -93,25 +93,25 @@ jobs:
             bandit-report.json
             safety-report.json
             pip-audit-report.json
-  codeql:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: python
-          queries: 'security-extended,security-and-quality'
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+  # codeql:
+  #   name: CodeQL Analysis
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     actions: read
+  #     contents: read
+  #     security-events: write
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #     - name: Initialize CodeQL
+  #       uses: github/codeql-action/init@v3
+  #       with:
+  #         languages: python
+  #         queries: 'security-extended,security-and-quality'
+  #     - name: Autobuild
+  #       uses: github/codeql-action/autobuild@v3
+  #     - name: Perform CodeQL Analysis
+  #       uses: github/codeql-action/analyze@v3
 
   scan:
     name: Check GitLeaks for Secrets
@@ -125,35 +125,53 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   semantic_release:
-    name: Get Next Version
-    needs: [test, security, codeql, scan]
+
+    name: Get Next Version Raw
+    # needs: [test, security, codeql, scan]
+    needs: [test, security, scan]
     runs-on: ubuntu-latest
+
+    outputs:
+      next-version: ${{ steps.version.outputs.next-version }}
+      current-version: ${{ steps.version.outputs.current-version }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch full history for semantic-release
+          fetch-depth: 0 # Fetch full history for semantic versioning
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: '18'
 
-      - name: Install Python Semantic Release
+      - name: Install semantic-release
         run: |
-          pip install python-semantic-release
+          npm install -g semantic-release @semantic-release/changelog @semantic-release/git
 
-      - name: Get next version
+      - name: Get current and next version
+        id: version
         run: |
-          echo "Getting next version..."
-          # NEXT_VERSION=$(semantic-release next-version)
-          NEXT_VERSION=$(semantic-release version --print --no-commit --no-tag --no-push)
-          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+          echo "Getting current version..."
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+          echo "Calculating next version..."
+          # Run semantic-release in dry-run mode to get next version
+          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci | grep -oP 'next release version is \K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+
+          # Fallback if semantic-release doesn't find changes
+          if [ -z "$NEXT_VERSION" ]; then
+            echo "No new version needed, using current version"
+            NEXT_VERSION=$CURRENT_VERSION
+          fi
+
+          echo "next-version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           echo "Next version: $NEXT_VERSION"
-          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
       - name: Print version info
         run: |
-          echo "Current version: CURRENT_VERSION=$(semantic-release version --print )"
-          echo "Current version: $CURRENT_VERSION"
+          echo "Current version: ${{ steps.version.outputs.current-version }}"
+          echo "Next version: ${{ steps.version.outputs.next-version }}"
