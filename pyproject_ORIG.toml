@@ -46,7 +46,7 @@ commit_author = "github-actions <github-actions@github.com>"
 # Handle first release
 tag_format = "v{version}"
 major_on_zero = false
-allow_zero_version = true
+allow_zero_version = truev1.0.0
 
 [tool.semantic_release.branches.main]
 match = "main"

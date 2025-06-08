@@ -114,7 +114,7 @@ jobs:
         uses: github/codeql-action/analyze@v2
 
   get-version:
-      name: Get Next Version with Python Semantic Release
+      name: Get Next Version - Semantic Release
       needs: [test, security, codeql]
       runs-on: ubuntu-latest
 
