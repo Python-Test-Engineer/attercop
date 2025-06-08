@@ -125,11 +125,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   semantic_release:
-
-    if: github.ref == 'refs/heads/main'
     name: Get Next Version
     needs: [test, security, codeql, scan]
-    # needs: [test, security, scan]
     runs-on: ubuntu-latest
 
     outputs:
@@ -142,70 +139,135 @@ jobs:
         with:
           fetch-depth: 0 # Fetch full history for semantic versioning
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          node-version: '18'
+          python-version: "3.11"
 
-      - name: Install semantic-release
+      - name: Install dependencies
         run: |
-          npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git
+          pip install GitPython
 
-      - name: Get current and next version
+      - name: Calculate next version
         id: version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Getting current version..."
-          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT_VERSION"
+          python << 'EOF'
+          import os
+          import re
+          import subprocess
+          from git import Repo
 
-          echo "Calculating next version..."
-          # Create basic semantic-release config if it doesn't exist
-          if [ ! -f ".releaserc" ] && [ ! -f ".releaserc.json" ] && [ ! -f "release.config.js" ]; then
-            echo '{
-              "branches": ["main", "master"],
-              "plugins": [
-                "@semantic-release/commit-analyzer",
-                "@semantic-release/release-notes-generator"
-              ]
-            }' > .releaserc.json
-          fi
+          def get_current_version():
+              """Get the current version from git tags"""
+              try:
+                  result = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'],
+                                        capture_output=True, text=True, check=True)
+                  return result.stdout.strip()
+              except subprocess.CalledProcessError:
+                  return "v0.0.0"
 
-          # Run semantic-release in dry-run mode and capture full output
-          echo "Running semantic-release dry-run..."
-          SEMANTIC_OUTPUT=$(npx semantic-release --dry-run 2>&1)
-          echo "Semantic-release output:"
-          echo "$SEMANTIC_OUTPUT"
+          def parse_version(version_str):
+              """Parse version string into components"""
+              # Remove 'v' prefix if present
+              clean_version = version_str.lstrip('v')
+              parts = clean_version.split('.')
+              return {
+                  'major': int(parts[0]) if len(parts) > 0 else 0,
+                  'minor': int(parts[1]) if len(parts) > 1 else 0,
+                  'patch': int(parts[2]) if len(parts) > 2 else 0
+              }
 
-          # Try multiple patterns to extract version
-          NEXT_VERSION=$(echo "$SEMANTIC_OUTPUT" | grep -oE "next release version is [v]?[0-9]+\.[0-9]+\.[0-9]+" | sed 's/next release version is //' | head -1)
-          if [ -z "$NEXT_VERSION" ]; then
-            NEXT_VERSION=$(echo "$SEMANTIC_OUTPUT" | grep -oE "Published release [v]?[0-9]+\.[0-9]+\.[0-9]+" | sed 's/Published release //' | head -1)
-          fi
-          if [ -z "$NEXT_VERSION" ]; then
-            NEXT_VERSION=$(echo "$SEMANTIC_OUTPUT" | grep -oE "[v]?[0-9]+\.[0-9]+\.[0-9]+" | head -1)
-          fi
+          def analyze_commits_since_tag(repo, last_tag):
+              """Analyze commits since last tag to determine version bump"""
+              try:
+                  if last_tag == "v0.0.0":
+                      # No previous tags, get all commits
+                      commits = list(repo.iter_commits())
+                  else:
+                      # Get commits since last tag
+                      commits = list(repo.iter_commits(f'{last_tag}..HEAD'))
+              except:
+                  commits = list(repo.iter_commits())
 
-          # Check if semantic-release found changes
-          if echo "$SEMANTIC_OUTPUT" | grep -q "no new version"; then
-            echo "No new version needed, using current version"
-            NEXT_VERSION=$CURRENT_VERSION
-          elif [ -z "$NEXT_VERSION" ]; then
-            echo "Could not determine next version, using current version"
-            NEXT_VERSION=$CURRENT_VERSION
-          else
-            # Ensure version has 'v' prefix if current version has it
-            if [[ $CURRENT_VERSION == v* ]] && [[ $NEXT_VERSION != v* ]]; then
-              NEXT_VERSION="v$NEXT_VERSION"
-            fi
-          fi
+              has_breaking = False
+              has_feature = False
+              has_fix = False
 
-          echo "next-version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-          echo "Next version: $NEXT_VERSION"
+              for commit in commits:
+                  message = commit.message.lower().strip()
+
+                  # Check for breaking changes
+                  if ('breaking change' in message or
+                      message.startswith('feat!:') or
+                      message.startswith('fix!:') or
+                      '!' in message.split(':')[0] if ':' in message else False):
+                      has_breaking = True
+
+                  # Check for features
+                  elif message.startswith('feat:') or message.startswith('feature:'):
+                      has_feature = True
+
+                  # Check for fixes
+                  elif message.startswith('fix:') or message.startswith('bugfix:'):
+                      has_fix = True
+
+              return has_breaking, has_feature, has_fix
+
+          def calculate_next_version(current_version, has_breaking, has_feature, has_fix):
+              """Calculate next version based on changes"""
+              version = parse_version(current_version)
+
+              if has_breaking:
+                  version['major'] += 1
+                  version['minor'] = 0
+                  version['patch'] = 0
+              elif has_feature:
+                  version['minor'] += 1
+                  version['patch'] = 0
+              elif has_fix:
+                  version['patch'] += 1
+              else:
+                  # No semantic changes found
+                  return current_version
+
+              # Maintain 'v' prefix if current version has it
+              prefix = 'v' if current_version.startswith('v') else ''
+              return f"{prefix}{version['major']}.{version['minor']}.{version['patch']}"
+
+          # Main logic
+          repo = Repo('.')
+          current_version = get_current_version()
+
+          print(f"Current version: {current_version}")
+
+          has_breaking, has_feature, has_fix = analyze_commits_since_tag(repo, current_version)
+
+          print(f"Analysis results:")
+          print(f"  Breaking changes: {has_breaking}")
+          print(f"  New features: {has_feature}")
+          print(f"  Bug fixes: {has_fix}")
+
+          next_version = calculate_next_version(current_version, has_breaking, has_feature, has_fix)
+
+          print(f"Next version: {next_version}")
+
+          # Set GitHub outputs
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"current-version={current_version}\n")
+              f.write(f"next-version={next_version}\n")
+
+          # Set environment variables for next steps
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write(f"CURRENT_VERSION={current_version}\n")
+              f.write(f"NEXT_VERSION={next_version}\n")
+          EOF
 
       - name: Print version info
         run: |
           echo "Current version: ${{ steps.version.outputs.current-version }}"
           echo "Next version: ${{ steps.version.outputs.next-version }}"
+          if [ "${{ steps.version.outputs.current-version }}" != "${{ steps.version.outputs.next-version }}" ]; then
+            echo "Version will be bumped!"
+          else
+            echo "No version bump needed"
+          fi
