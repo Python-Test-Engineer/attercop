@@ -427,8 +427,7 @@ jobs:
 
 
   update-version:
-    name: Update app and pyproject.toml with new version
-    needs: [create_release, semantic_release]  # Add semantic_release to needs
+    needs: semantic_release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -438,28 +437,18 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Update versions
+      - name: Update version files
+        env:
+          NEXT_VERSION: ${{ needs.semantic_release.outputs.next-version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
-          echo "Updating to version: ${{ needs.semantic_release.outputs.next-version }}"
+          python update_version.py
 
-          # Update pyproject.toml
-          python -c "
-          import re
-          with open('pyproject.toml', 'r') as f:
-              content = f.read()
-          content = re.sub(r'version = \"[^\"]*\"', 'version = \"${{ needs.semantic_release.outputs.next-version }}\"', content)
-          with open('pyproject.toml', 'w') as f:
-              f.write(content)
-          print('Updated pyproject.toml')
-          "
-
-          # Update __version__ in src/calculator/__init__.py
-          python -c "
-          import re
-          with open('src/calculator/__init__.py', 'r') as f:
-              content = f.read()
-          content = re.sub(r'__version__ = \"[^\"]*\"', '__version__ = \"2.5.0\"', content)
-          with open('src/calculator/__init__.py', 'w') as f:
-              f.write(content)
-          print('Updated src/calculator/__init__.py')
-          "
+      # - name: Commit changes
+      #   run: |
+      #     git config --local user.email "action@github.com"
+      #     git config --local user.name "GitHub Action"
+      #     git add .
+      #     git commit -m "Update version to ${{ needs.semantic_release.outputs.next-version }}"
+      #     git push
