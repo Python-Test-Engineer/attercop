@@ -67,6 +67,5 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config user.name github-actions
-        git config user.email github-actions@github.com
-        uv run semantic-release version
-        uv run semantic-release publish
+        git config user.email github-actions
+        uv run semantic-release

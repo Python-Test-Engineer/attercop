@@ -33,11 +33,13 @@ jobs:
     - name: Run tests
       run: uv run pytest
 
-    - name: Run linting
+    - name: Run linting with Ruff
       run: |
-        uv run black --check src tests
-        uv run isort --check-only src tests
-        uv run flake8 src tests
+        uv run ruff check src tests
+        uv run ruff format --check src tests
+
+    - name: Run type checking with Pyright
+      run: uv run pyright src tests
 
   release:
     needs: test
