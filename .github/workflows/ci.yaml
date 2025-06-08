@@ -126,7 +126,8 @@ jobs:
 
   semantic_release:
 
-    name: Get Next Version Raw
+    if: github.ref == 'refs/heads/main'
+    name: Get Next Version
     # needs: [test, security, codeql, scan]
     needs: [test, security, scan]
     runs-on: ubuntu-latest
@@ -148,24 +149,57 @@ jobs:
 
       - name: Install semantic-release
         run: |
-          npm install -g semantic-release @semantic-release/changelog @semantic-release/git
+          npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git
 
       - name: Get current and next version
         id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Getting current version..."
-          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current version: $CURRENT_VERSION"
 
           echo "Calculating next version..."
-          # Run semantic-release in dry-run mode to get next version
-          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci | grep -oP 'next release version is \K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          # Create basic semantic-release config if it doesn't exist
+          if [ ! -f ".releaserc" ] && [ ! -f ".releaserc.json" ] && [ ! -f "release.config.js" ]; then
+            echo '{
+              "branches": ["main", "master"],
+              "plugins": [
+                "@semantic-release/commit-analyzer",
+                "@semantic-release/release-notes-generator"
+              ]
+            }' > .releaserc.json
+          fi
 
-          # Fallback if semantic-release doesn't find changes
+          # Run semantic-release in dry-run mode and capture full output
+          echo "Running semantic-release dry-run..."
+          SEMANTIC_OUTPUT=$(npx semantic-release --dry-run 2>&1)
+          echo "Semantic-release output:"
+          echo "$SEMANTIC_OUTPUT"
+
+          # Try multiple patterns to extract version
+          NEXT_VERSION=$(echo "$SEMANTIC_OUTPUT" | grep -oE "next release version is [v]?[0-9]+\.[0-9]+\.[0-9]+" | sed 's/next release version is //' | head -1)
           if [ -z "$NEXT_VERSION" ]; then
+            NEXT_VERSION=$(echo "$SEMANTIC_OUTPUT" | grep -oE "Published release [v]?[0-9]+\.[0-9]+\.[0-9]+" | sed 's/Published release //' | head -1)
+          fi
+          if [ -z "$NEXT_VERSION" ]; then
+            NEXT_VERSION=$(echo "$SEMANTIC_OUTPUT" | grep -oE "[v]?[0-9]+\.[0-9]+\.[0-9]+" | head -1)
+          fi
+
+          # Check if semantic-release found changes
+          if echo "$SEMANTIC_OUTPUT" | grep -q "no new version"; then
             echo "No new version needed, using current version"
             NEXT_VERSION=$CURRENT_VERSION
+          elif [ -z "$NEXT_VERSION" ]; then
+            echo "Could not determine next version, using current version"
+            NEXT_VERSION=$CURRENT_VERSION
+          else
+            # Ensure version has 'v' prefix if current version has it
+            if [[ $CURRENT_VERSION == v* ]] && [[ $NEXT_VERSION != v* ]]; then
+              NEXT_VERSION="v$NEXT_VERSION"
+            fi
           fi
 
           echo "next-version=$NEXT_VERSION" >> $GITHUB_OUTPUT
