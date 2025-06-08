@@ -82,7 +82,7 @@ jobs:
           pip-audit
         continue-on-error: true
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3 #@v4 passes
         if: always()
         with:
           name: security-reports
