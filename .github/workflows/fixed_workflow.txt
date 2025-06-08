@@ -133,26 +133,13 @@ jobs:
         run: uv venv
       - name: Install linting tools
         run: |
-          uv pip install black isort flake8 mypy
-      - name: Check code formatting with Black
+          uv pip install ruff pyright
+      - name: Lint and format with Ruff
         run: |
           source .venv/bin/activate
-          black --check --diff attercop/
-      - name: Check import sorting with isort
+          ruff check attercop/
+          ruff format --check attercop/
+      - name: Type check with Pyright
         run: |
           source .venv/bin/activate
-          isort --check-only --diff attercop/
-      - name: Lint with flake8
-        run: >
-          source .venv/bin/activate
-
-          flake8 attercop/ --count --select=E9,F63,F7,F82 --show-source
-          --statistics
-
-          flake8 attercop/ --count --exit-zero --max-complexity=10
-          --max-line-length=88 --statistics
-      - name: Type check with mypy
-        run: |
-          source .venv/bin/activate
-          mypy attercop/ || true
-        continue-on-error: true
+          pyright attercop/
