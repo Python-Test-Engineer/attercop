@@ -423,3 +423,23 @@ jobs:
           files: ./dist/*  # Adjust path to your build artifacts
         # Only run if you have artifacts to upload
         if: false  # Change to true if you want to upload artifacts
+
+
+
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update versions
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+          sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" calculator/__init__.py
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Update version to $VERSION"
+          git push
