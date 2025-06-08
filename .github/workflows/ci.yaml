@@ -142,7 +142,7 @@ jobs:
 
       - name: Print version info
         run: |
-          echo "Current version: $(semantic-release version )"
+          echo "Current version: $(semantic-release version --current)"
           echo "Next version: $NEXT_VERSION"
   release:
     needs: [test, security, codeql, get-version]
