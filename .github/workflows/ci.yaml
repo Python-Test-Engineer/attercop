@@ -460,7 +460,7 @@ jobs:
           with open('calculator/__init__.py', 'r') as f:
               content = f.read()
           content = re.sub(r'__version__ = \"[^\"]*\"', f'__version__ = \"{version}\"', content)
-          with open('calculator/__init__.py', 'w') as f:
+          with open('src/calculator/__init__.py', 'w') as f:
               f.write(content)
           print('Updated calculator/__init__.py')
           "
