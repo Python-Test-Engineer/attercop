@@ -436,7 +436,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.12'
 
       - name: Update versions
         run: |
@@ -457,7 +457,7 @@ jobs:
           print('Updated pyproject.toml')
 
           # Update __version__ in calculator/__init__.py
-          with open('calculator/__init__.py', 'r') as f:
+          with open('src/calculator/__init__.py', 'r') as f:
               content = f.read()
           content = re.sub(r'__version__ = \"[^\"]*\"', f'__version__ = \"{version}\"', content)
           with open('src/calculator/__init__.py', 'w') as f:
@@ -465,9 +465,9 @@ jobs:
           print('Updated calculator/__init__.py')
           "
 
-      - name: Commit changes
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
+      # - name: Commit changes
+      #   run: |
+      #     VERSION=${GITHUB_REF#refs/tags/v}
+      #     git config --local user.email "action@github.com"
+      #     git config --local user.name "GitHub Action"
+      #     git add .
