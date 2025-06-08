@@ -124,7 +124,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-semantic_release:
+  semantic_release:
     name: Get Next Version
     needs: [test, security, codeql, scan]
     runs-on: ubuntu-latest
@@ -155,7 +155,8 @@ semantic_release:
         run: |
           echo "Current version: $(semantic-release version --current)"
           echo "Next version: $NEXT_VERSION"
-
+          NEXT_VERSION=$(semantic-release version --print --no-commit --no-tag --no-push)
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
   # release:
   #   needs: [test, security, codeql, scan]
   #   name: Semantic Release
