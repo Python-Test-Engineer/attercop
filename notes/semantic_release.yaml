@@ -1,0 +1,38 @@
+name: Get Next Version with Python Semantic Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history for semantic-release
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Python Semantic Release
+        run: |
+          pip install python-semantic-release
+
+      - name: Get next version
+        run: |
+          echo "Getting next version..."
+          NEXT_VERSION=$(semantic-release version --print)
+          echo "Next version: $NEXT_VERSION"
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+
+      - name: Print version info
+        run: |
+          echo "Current version: $(semantic-release version --current)"
+          echo "Next version: $NEXT_VERSION"
