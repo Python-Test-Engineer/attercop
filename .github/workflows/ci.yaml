@@ -147,7 +147,9 @@ jobs:
       - name: Get next version
         run: |
           echo "Getting next version..."
-          NEXT_VERSION=$(semantic-release next-version)
+          # NEXT_VERSION=$(semantic-release next-version)
+          NEXT_VERSION=$(semantic-release version --print --no-commit --no-tag --no-push)
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
           echo "Next version: $NEXT_VERSION"
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
@@ -155,8 +157,7 @@ jobs:
         run: |
           echo "Current version: $(semantic-release version --current)"
           echo "Next version: $NEXT_VERSION"
-          NEXT_VERSION=$(semantic-release version --print --no-commit --no-tag --no-push)
-          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+
   # release:
   #   needs: [test, security, codeql, scan]
   #   name: Semantic Release
