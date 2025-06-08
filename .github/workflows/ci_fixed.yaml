@@ -46,6 +46,7 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
   security:
+    name: Security Scans With Bandit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
