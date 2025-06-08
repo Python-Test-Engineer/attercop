@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   test:
+    name: Run Tests and Coverage
     runs-on: ubuntu-latest
     strategy:
       matrix:
