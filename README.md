@@ -1,3 +1,3 @@
 Attercop POC
 
-A simple calculator POC for semantic release demo
+A simple calculator POC for semantic release demo - some success with bunping version automatically.
