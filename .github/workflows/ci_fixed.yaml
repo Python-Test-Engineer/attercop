@@ -113,7 +113,8 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
   release:
-    needs: test
+    needs: [test, security, codeql]
+    name: Semantic Release
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
