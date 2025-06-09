@@ -25,7 +25,7 @@ The most important thing is that the current release version is set in `pyprojec
 
 The version is statically set. If you change to dynamic versioning you will need to update the `version` in `pyproject.toml` and the `__version__` in `src/calculator/__init__.py`.
 
-If you have diffuclty with end of line formating even if you have avoided trailing spaces, you can either comment out this in the `pre-commit-config.yaml` or use `git rm -rf --cache .` to remove the pre-commit cache and then run the commit again.
+If you have diffuclty with end of line formating even if you have avoided trailing spaces, you can either comment out this in the `pre-commit-config.yaml` or use `git rm -rf --cache .` to remove the pre-commit cache and then run the add and commit again.
 
 `uv sync` will install all dependencies from the lock file.
 
