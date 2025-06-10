@@ -55,5 +55,6 @@ class Calculator:
         """
         if b == 0:
             raise ValueError("Cannot divide by zero")
+        print("final")
 
         return a / b
