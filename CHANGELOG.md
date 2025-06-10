@@ -1,5 +1,5 @@
 # Changelog
 
-## Version in calculator removed
+some new information from 1.36.0
 
-## Changelog and commit info entered into release notes.
+15:30
