@@ -40,7 +40,7 @@ jobs:
         echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
 
         # Print commit information
-        echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+        echo "=== Latest Commit Information ==="
         echo "=== Latest Commit Information for CHANGELOG.md ==="
         echo "Full Hash: $COMMIT_HASH"
         echo "Short Hash: $COMMIT_SHORT"
@@ -105,62 +105,3 @@ jobs:
         echo "- Author: ${{ steps.changelog-commit.outputs.commit_author }}"
         echo "- Date: ${{ steps.changelog-commit.outputs.commit_date }}"
         echo "- Message: ${{ steps.changelog-commit.outputs.commit_message }}"
-
-    - name: Create Release Notes
-      if: steps.check-changelog.outputs.changelog_exists == 'true'
-      run: |
-        # Create comprehensive release notes
-        cat > RELEASE_NOTES.md << 'EOF'
-        # Release Notes
-
-        ## Latest Changes from CHANGELOG.md
-
-        $(cat latest_changelog_section.md)
-
-        ---
-
-        ## Commit Information
-
-        **Last Modified:** ${{ steps.changelog-commit.outputs.commit_date }}
-        **Author:** ${{ steps.changelog-commit.outputs.commit_author }}
-        **Commit:** [${{ steps.changelog-commit.outputs.commit_short }}](${{ env.commit_url }})
-        **Message:** ${{ steps.changelog-commit.outputs.commit_message }}
-
-        ---
-
-        ## Build Information
-
-        **Workflow:** ${{ github.workflow }}
-        **Run ID:** ${{ github.run_id }}
-        **Repository:** ${{ github.repository }}
-        **Branch/Tag:** ${{ github.ref_name }}
-        **SHA:** ${{ github.sha }}
-
-        EOF
-
-        echo "📄 Created RELEASE_NOTES.md"
-        echo "=== Release Notes Preview ==="
-        cat RELEASE_NOTES.md
-        echo "============================"
-
-    - name: Create GitHub Release (if triggered by tag)
-      if: steps.check-changelog.outputs.changelog_exists == 'true' && startsWith(github.ref, 'refs/tags/')
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
-        body_path: RELEASE_NOTES.md
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Notes and Changelog artifacts
-      if: steps.check-changelog.outputs.changelog_exists == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-notes-and-changelog
-        path: |
-          RELEASE_NOTES.md
-          latest_changelog_section.md
-          full_changelog.md
