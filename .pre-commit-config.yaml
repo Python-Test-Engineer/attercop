@@ -12,6 +12,11 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
 
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.401
+    hooks:
+      - id: pyright
+
   # Python code formatting and linting with Ruff
   # Ruff is a fast Python linter, formatter, and code analysis tool that can replace flake8, black, and isort.
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -23,11 +28,6 @@ repos:
         args: [--fix]
       # Run the formatter.
       - id: ruff-format
-
-  # - repo: https://github.com/RobertCraigie/pyright-python
-  #   rev: v1.1.401
-  #   hooks:
-  #     - id: pyright
 
   # Conventional commit message validation
   # This hook checks commit messages against the conventional commit format so that we can use semantic versioning dynamically.
