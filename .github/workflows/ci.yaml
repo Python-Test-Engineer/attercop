@@ -47,72 +47,72 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
-  # security:
-  #   name: Security Scans With Bandit
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v4
-  #       with:
-  #         python-version: '3.11'
-  #     - name: Install uv
-  #       uses: astral-sh/setup-uv@v2
-  #       with:
-  #         version: latest
-  #     - name: Create virtual environment
-  #       run: uv venv
-  #     - name: Install dependencies
-  #       run: |
-  #         uv pip install -e .
-  #         uv pip install bandit safety pip-audit
-  #     - name: Run Bandit security scan
-  #       run: |
-  #         source .venv/bin/activate
-  #         bandit -r attercop/ -f json -o bandit-report.json || true
-  #         bandit -r attercop/ -f txt
-  #       continue-on-error: true
-  #     - name: Run Safety check
-  #       run: |
-  #         source .venv/bin/activate
-  #         safety check --json --output safety-report.json || true
-  #         safety check
-  #       continue-on-error: true
-  #     - name: Run pip-audit
-  #       run: |
-  #         source .venv/bin/activate
-  #         pip-audit --format=json --output=pip-audit-report.json || true
-  #         pip-audit
-  #       continue-on-error: true
-  #     - name: Upload security reports
-  #       uses: actions/upload-artifact@v4
-  #       if: always()
-  #       with:
-  #         name: security-reports
-  #         path: |
-  #           bandit-report.json
-  #           safety-report.json
-  #           pip-audit-report.json
-  # codeql:
-  #   name: CodeQL Analysis
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     actions: read
-  #     contents: read
-  #     security-events: write
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-  #     - name: Initialize CodeQL
-  #       uses: github/codeql-action/init@v3
-  #       with:
-  #         languages: python
-  #         queries: 'security-extended,security-and-quality'
-  #     - name: Autobuild
-  #       uses: github/codeql-action/autobuild@v3
-  #     - name: Perform CodeQL Analysis
-  #       uses: github/codeql-action/analyze@v3
+  security:
+    name: Security Scans With Bandit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: latest
+      - name: Create virtual environment
+        run: uv venv
+      - name: Install dependencies
+        run: |
+          uv pip install -e .
+          uv pip install bandit safety pip-audit
+      - name: Run Bandit security scan
+        run: |
+          source .venv/bin/activate
+          bandit -r attercop/ -f json -o bandit-report.json || true
+          bandit -r attercop/ -f txt
+        continue-on-error: true
+      - name: Run Safety check
+        run: |
+          source .venv/bin/activate
+          safety check --json --output safety-report.json || true
+          safety check
+        continue-on-error: true
+      - name: Run pip-audit
+        run: |
+          source .venv/bin/activate
+          pip-audit --format=json --output=pip-audit-report.json || true
+          pip-audit
+        continue-on-error: true
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+            pip-audit-report.json
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: 'security-extended,security-and-quality'
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
 
   scan:
     name: Check GitLeaks for Secrets
@@ -127,9 +127,8 @@ jobs:
 
   semantic_release:
     name: Get Next Version
-    # needs: [test, security, codeql, scan]
-    needs: [test,  scan]
-    # needs: [test, security,  scan]
+    needs: [test, security, codeql, scan]
+
     runs-on: ubuntu-latest
 
     outputs:

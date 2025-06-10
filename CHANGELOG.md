@@ -1,6 +1,9 @@
 # Changelog
 
+## 10JUN2025
+
 ## [Unreleased]
+
 ### Added
 - New feature X that improves performance by 30%
 - Support for configuration file validation
