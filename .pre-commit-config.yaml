@@ -45,6 +45,11 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.401
+    hooks:
+      - id: pyright
+
   # Conventional commit message validation
   # This hook checks commit messages against the conventional commit format so that we can use semantic versioning dynamically.
   # It requires the commit message to start with a type (e.g., feat, fix, chore) followed by a scope and a description.
