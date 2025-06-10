@@ -2,11 +2,9 @@ name: Get Changelog and Create Release Notes
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main]
     tags:
       - 'v*'
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -42,6 +40,7 @@ jobs:
         echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
 
         # Print commit information
+        echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         echo "=== Latest Commit Information for CHANGELOG.md ==="
         echo "Full Hash: $COMMIT_HASH"
         echo "Short Hash: $COMMIT_SHORT"
