@@ -444,7 +444,9 @@ jobs:
           def generate_release_notes(next_version, current_version, features, fixes, breaking, other):
               """Generate formatted release notes"""
               # notes = f"# Release {next_version}\n\n"
-              notes = ""
+              notes = "${{ steps.changelog-commit.outputs.commit_hash }}\n\n"
+              notes += f"${{ steps.changelog-commit.outputs.commit_author }}\n"
+              notes += f"**Release Date**: {datetime.now().strftime('%Y-%m-%d')}\n\n"  # Add release date
 
               if breaking:
                   notes += "## 💥 Breaking Changes\n"
