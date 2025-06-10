@@ -1,6 +1,6 @@
 # Changelog
 
-## 10JUN2025
+## 10JUN2025 - 2025-06-10
 
 ## [Unreleased]
 
