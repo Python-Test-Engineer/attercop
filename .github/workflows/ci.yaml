@@ -443,7 +443,8 @@ jobs:
 
           def generate_release_notes(next_version, current_version, features, fixes, breaking, other):
               """Generate formatted release notes"""
-              notes = f"# Release {next_version}\n\n"
+              # notes = f"# Release {next_version}\n\n"
+              notes = ""
 
               if breaking:
                   notes += "## 💥 Breaking Changes\n"
