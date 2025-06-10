@@ -300,6 +300,101 @@ jobs:
         run: |
           pip install GitPython
 
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history to get complete commit information
+          fetch-depth: 0
+
+      - name: Get latest commit info for CHANGELOG.md
+        id: changelog-commit
+        run: |
+          # Get the latest commit hash that modified CHANGELOG.md
+          COMMIT_HASH=$(git log -1 --format="%H" -- CHANGELOG.md)
+
+          # Get commit details
+          COMMIT_SHORT=$(git log -1 --format="%h" -- CHANGELOG.md)
+          COMMIT_AUTHOR=$(git log -1 --format="%an" -- CHANGELOG.md)
+          COMMIT_EMAIL=$(git log -1 --format="%ae" -- CHANGELOG.md)
+          COMMIT_DATE=$(git log -1 --format="%ad" --date=iso -- CHANGELOG.md)
+          COMMIT_MESSAGE=$(git log -1 --format="%s" -- CHANGELOG.md)
+
+          # Output to GitHub Actions environment
+          echo "commit_hash=$COMMIT_HASH" >> $GITHUB_OUTPUT
+          echo "commit_short=$COMMIT_SHORT" >> $GITHUB_OUTPUT
+          echo "commit_author=$COMMIT_AUTHOR" >> $GITHUB_OUTPUT
+          echo "commit_email=$COMMIT_EMAIL" >> $GITHUB_OUTPUT
+          echo "commit_date=$COMMIT_DATE" >> $GITHUB_OUTPUT
+          echo "commit_message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+
+          # Print commit information
+          echo "=== Latest Commit Information for CHANGELOG.md ==="
+          echo "Full Hash: $COMMIT_HASH"
+          echo "Short Hash: $COMMIT_SHORT"
+          echo "Author: $COMMIT_AUTHOR <$COMMIT_EMAIL>"
+          echo "Date: $COMMIT_DATE"
+          echo "Message: $COMMIT_MESSAGE"
+          echo "=============================================="
+
+      - name: Check if CHANGELOG.md exists
+        id: check-changelog
+        run: |
+          if [ -f "CHANGELOG.md" ]; then
+            echo "changelog_exists=true" >> $GITHUB_OUTPUT
+            echo "✅ CHANGELOG.md exists"
+          else
+            echo "changelog_exists=false" >> $GITHUB_OUTPUT
+            echo "❌ CHANGELOG.md not found"
+          fi
+
+      - name: Get latest commit contents for CHANGELOG.md
+        id: changelog-content
+        if: steps.check-changelog.outputs.changelog_exists == 'true'
+        run: |
+          # Get the content of CHANGELOG.md from the latest commit that modified it
+          COMMIT_HASH="${{ steps.changelog-commit.outputs.commit_hash }}"
+
+          # Get the file content from that specific commit
+          CHANGELOG_CONTENT=$(git show $COMMIT_HASH:CHANGELOG.md)
+
+          # Extract the latest version section (everything from first ## to next ## or end of file)
+          LATEST_SECTION=$(echo "$CHANGELOG_CONTENT" | awk '/^## / {if(found) exit; found=1} found')
+
+          # If no ## sections found, take the first 50 lines
+          if [ -z "$LATEST_SECTION" ]; then
+            LATEST_SECTION=$(echo "$CHANGELOG_CONTENT" | head -50)
+          fi
+
+          # Save to file for multi-line content
+          echo "$LATEST_SECTION" > latest_changelog_section.md
+
+          # Also save full content
+          echo "$CHANGELOG_CONTENT" > full_changelog.md
+
+          echo "=== Latest Changelog Section ==="
+          echo "$LATEST_SECTION"
+          echo "==============================="
+
+          # Set output for use in other steps
+          echo "latest_section_file=latest_changelog_section.md" >> $GITHUB_OUTPUT
+          echo "full_changelog_file=full_changelog.md" >> $GITHUB_OUTPUT
+
+      - name: Get commit URL and display details
+        if: steps.check-changelog.outputs.changelog_exists == 'true'
+        run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          COMMIT_URL="$REPO_URL/commit/${{ steps.changelog-commit.outputs.commit_hash }}"
+          echo "🔗 View commit: $COMMIT_URL"
+          echo "commit_url=$COMMIT_URL" >> $GITHUB_ENV
+
+          echo "=== Using Commit Information ==="
+          echo "- Hash: ${{ steps.changelog-commit.outputs.commit_hash }}"
+          echo "- Author: ${{ steps.changelog-commit.outputs.commit_author }}"
+          echo "- Date: ${{ steps.changelog-commit.outputs.commit_date }}"
+          echo "- Message: ${{ steps.changelog-commit.outputs.commit_message }}"
+
+
       - name: Generate release notes
         id: release_notes
         env:
