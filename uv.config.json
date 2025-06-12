@@ -1,0 +1,7 @@
+{
+    "pyright": {
+        "ignore": [
+            "src/modal_app.py"
+        ]
+    }
+}

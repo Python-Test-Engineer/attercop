@@ -1,0 +1,104 @@
+name: Deploy to Modal
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  print_modal_authentication:
+    name: Print Modal Authentication
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Safe Debug - Check Secret Existence
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          echo "Checking if secrets are set..."
+
+          if [ -z "$MODAL_TOKEN_ID" ]; then
+            echo "❌ MODAL_TOKEN_ID is NOT set"
+          else
+            echo "✅ MODAL_TOKEN_ID is set"
+            echo "Token ID starts with: ${MODAL_TOKEN_ID:0:3}..."
+            echo "Token ID length: ${#MODAL_TOKEN_ID}"
+          fi
+
+          if [ -z "$MODAL_TOKEN_SECRET" ]; then
+            echo "❌ MODAL_TOKEN_SECRET is NOT set"
+          else
+            echo "✅ MODAL_TOKEN_SECRET is set"
+            echo "Token Secret starts with: ${MODAL_TOKEN_SECRET:0:3}..."
+            echo "Token Secret length: ${#MODAL_TOKEN_SECRET}"
+          fi
+
+      - name: Test Modal Authentication
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          pip install modal
+          echo "Attempting to authenticate with Modal..."
+          modal token set --token-id $MODAL_TOKEN_ID --token-secret $MODAL_TOKEN_SECRET
+          echo "Authentication successful!"
+          modal app list
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install modal
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Authenticate with Modal
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          modal token set --token-id $MODAL_TOKEN_ID --token-secret $MODAL_TOKEN_SECRET
+
+      - name: Deploy to Modal
+        run: |
+          modal deploy modal_app.py
+
+      # Optional: Run tests before deployment
+      - name: Run tests
+        run: |
+          if [ -f pytest.ini ] || [ -f pyproject.toml ] || [ -d tests ]; then
+            pip install pytest
+            pytest
+          fi
+        continue-on-error: false
+
+      # Optional: Deploy different environments based on branch
+      - name: Deploy to staging (if not main branch)
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+        run: |
+          modal deploy modal_app.py --name my-app-staging
+
+      - name: Deploy to production (if main branch)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          modal deploy modal_app.py --name my-app-prod

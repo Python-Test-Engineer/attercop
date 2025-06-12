@@ -1,6 +1,6 @@
 [project]
 name = "attercop"
-version = "1.39.0"
+version = "1.40.0"
 
 description = "An MVP of CI/CD using GitHub Actions."
 authors = [{name = "Your Name", email = "your.email@example.com"}]
@@ -13,10 +13,13 @@ classifiers = [
 ]
 dependencies = [
     "black>=25.1.0",
+    "fastapi>=0.115.12",
+    "modal>=1.0.3",
     "pre-commit>=4.2.0",
     "pyright>=1.1.401",
     "pytest>=8.4.0",
     "ruff>=0.11.13",
+    "uvicorn>=0.34.3",
 ]
 
 [project.optional-dependencies]

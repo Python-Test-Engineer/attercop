@@ -1,5 +1,4 @@
 # Changelog
 
-some new information from 1.36.0
-
-15:30
+Added modal and modal_app.py
+No secrets so will need to do that so that we can deploy
