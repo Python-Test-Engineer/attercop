@@ -1,6 +1,11 @@
 name: List All Commits
 
 on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
   workflow_dispatch:
     inputs:
       format:
