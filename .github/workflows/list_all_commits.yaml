@@ -1,6 +1,11 @@
 name: List All Commits
 
 on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
   workflow_dispatch:
     inputs:
       format:
@@ -14,10 +19,11 @@ on:
           - short
           - medium
       max_count:
-        description: 'Maximum number of commits to show (0 = all)'
+        description: 'Maximum number of commits to show (0 for all)'
         required: false
         default: '0'
         type: string
+
 
 jobs:
   list-commits:
