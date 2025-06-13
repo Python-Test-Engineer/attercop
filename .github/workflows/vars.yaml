@@ -6,7 +6,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Log Vars
         run: |
           echo "VAR1: ${{ vars.VAR1}}"
