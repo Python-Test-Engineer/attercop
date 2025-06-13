@@ -1,0 +1,165 @@
+name: List All Commits
+
+on:
+  workflow_dispatch:
+    inputs:
+      format:
+        description: 'Output format for commits'
+        required: false
+        default: 'oneline'
+        type: choice
+        options:
+          - oneline
+          - full
+          - short
+          - medium
+      max_count:
+        description: 'Maximum number of commits to show (0 = all)'
+        required: false
+        default: '0'
+        type: string
+
+jobs:
+  list-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for all branches and tags
+
+    - name: List all commits
+      run: |
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Total commits in repository:"
+
+        # Count total commits across all branches
+        TOTAL_COMMITS=$(git rev-list --all --count)
+        echo "Total commits across all branches: $TOTAL_COMMITS"
+
+        # Set max count parameter
+        MAX_COUNT="${{ github.event.inputs.max_count }}"
+        if [ "$MAX_COUNT" = "0" ] || [ -z "$MAX_COUNT" ]; then
+          MAX_COUNT_PARAM=""
+          echo "Showing all commits"
+        else
+          MAX_COUNT_PARAM="--max-count=$MAX_COUNT"
+          echo "Showing last $MAX_COUNT commits"
+        fi
+
+        # Set format parameter
+        FORMAT="${{ github.event.inputs.format }}"
+        if [ -z "$FORMAT" ]; then
+          FORMAT="oneline"
+        fi
+
+        echo ""
+        echo "=== COMMITS (Format: $FORMAT) ==="
+        echo ""
+
+        case "$FORMAT" in
+          "oneline")
+            git log --all --oneline --graph --decorate $MAX_COUNT_PARAM
+            ;;
+          "full")
+            git log --all --graph --decorate $MAX_COUNT_PARAM
+            ;;
+          "short")
+            git log --all --graph --decorate --pretty=short $MAX_COUNT_PARAM
+            ;;
+          "medium")
+            git log --all --graph --decorate --pretty=medium $MAX_COUNT_PARAM
+            ;;
+          *)
+            git log --all --oneline --graph --decorate $MAX_COUNT_PARAM
+            ;;
+        esac
+
+        echo ""
+        echo "=== COMMIT STATISTICS ==="
+        echo ""
+
+        # Show commits per author
+        echo "Commits per author:"
+        git shortlog --all --summary --numbered
+
+        echo ""
+        echo "First commit:"
+        git log --all --reverse --oneline | head -1
+
+        echo ""
+        echo "Latest commit:"
+        git log --all --oneline | head -1
+
+        echo ""
+        echo "Branches with commits:"
+        git branch -r --merged | head -10
+
+    - name: Save commit list to artifact
+      run: |
+        mkdir -p output
+
+        echo "# All Commits Report" > output/commits_report.md
+        echo "Generated on: $(date)" >> output/commits_report.md
+        echo "Repository: ${{ github.repository }}" >> output/commits_report.md
+        echo "" >> output/commits_report.md
+
+        echo "## Summary" >> output/commits_report.md
+        TOTAL_COMMITS=$(git rev-list --all --count)
+        echo "- Total commits: $TOTAL_COMMITS" >> output/commits_report.md
+        echo "- Format: ${{ github.event.inputs.format }}" >> output/commits_report.md
+
+        if [ "${{ github.event.inputs.max_count }}" != "0" ]; then
+          echo "- Showing last: ${{ github.event.inputs.max_count }} commits" >> output/commits_report.md
+        else
+          echo "- Showing: All commits" >> output/commits_report.md
+        fi
+
+        echo "" >> output/commits_report.md
+        echo "## Commits" >> output/commits_report.md
+        echo "\`\`\`" >> output/commits_report.md
+
+        # Add commits to markdown file
+        MAX_COUNT="${{ github.event.inputs.max_count }}"
+        if [ "$MAX_COUNT" = "0" ] || [ -z "$MAX_COUNT" ]; then
+          MAX_COUNT_PARAM=""
+        else
+          MAX_COUNT_PARAM="--max-count=$MAX_COUNT"
+        fi
+
+        FORMAT="${{ github.event.inputs.format }}"
+        if [ -z "$FORMAT" ]; then
+          FORMAT="oneline"
+        fi
+
+        case "$FORMAT" in
+          "oneline")
+            git log --all --oneline --graph --decorate $MAX_COUNT_PARAM >> output/commits_report.md
+            ;;
+          "full")
+            git log --all --graph --decorate $MAX_COUNT_PARAM >> output/commits_report.md
+            ;;
+          "short")
+            git log --all --graph --decorate --pretty=short $MAX_COUNT_PARAM >> output/commits_report.md
+            ;;
+          "medium")
+            git log --all --graph --decorate --pretty=medium $MAX_COUNT_PARAM >> output/commits_report.md
+            ;;
+        esac
+
+        echo "\`\`\`" >> output/commits_report.md
+
+        echo "" >> output/commits_report.md
+        echo "## Author Statistics" >> output/commits_report.md
+        echo "\`\`\`" >> output/commits_report.md
+        git shortlog --all --summary --numbered >> output/commits_report.md
+        echo "\`\`\`" >> output/commits_report.md
+
+    - name: Upload commit report
+      uses: actions/upload-artifact@v4
+      with:
+        name: commits-report
+        path: output/commits_report.md
+        retention-days: 30
