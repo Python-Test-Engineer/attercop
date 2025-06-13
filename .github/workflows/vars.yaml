@@ -1,0 +1,13 @@
+name: Variables and Secrets
+on: [push]
+
+jobs:
+  log-vars:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Log Vars
+        run: |
+          echo "VAR1: ${{ vars.VAR1}}"
+          echo "VAR2: ${{ vars.VAR2}}"
