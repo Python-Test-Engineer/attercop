@@ -22,4 +22,4 @@ jobs:
 
     steps:
       - name: Hello
-        run: echo "Hello from the reusable build workflow!"
+        run: echo "Hello ${{github.event.inputs.environment}} from the reusable build workflow!"
