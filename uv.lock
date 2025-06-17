@@ -144,7 +144,7 @@ wheels = [
 
 [[package]]
 name = "attercop"
-version = "1.40.0"
+version = "1.45.0"
 source = { editable = "." }
 dependencies = [
     { name = "black" },
