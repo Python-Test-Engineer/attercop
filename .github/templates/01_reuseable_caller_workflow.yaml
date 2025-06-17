@@ -1,0 +1,19 @@
+name: Main Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-reusable-build:
+    uses: Python-Test-Engineer/gha/.github/workflows/01_reuseable_build.yml@main
+    with:
+      environment: 'production'
+      node-version: '20'
+
+  post-build:
+    needs: call-reusable-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show build result
+        run: |
+          echo "Build workflow completed!"

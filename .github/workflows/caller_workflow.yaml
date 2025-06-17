@@ -1,0 +1,23 @@
+name: Main Workflow
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  call-build:
+    uses: ./.github/workflows/build.yml
+    with:
+      environment: 'production'
+      node-version: '20'
+
+  post-build:
+    needs: call-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show build result
+        run: |
+          echo "Build status: ${{ needs.call-build.outputs.build-status }}"
+          echo "Build workflow completed!"
