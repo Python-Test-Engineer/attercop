@@ -51,5 +51,4 @@ if results:
         )
     exit(1)  # Exit with a non-zero status to indicate an error
 else:
-    print("No potential sensitive information found.")
-    raiseError = False
+    print("NO POTENTIAL sensitive information found.")
