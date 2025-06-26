@@ -15,7 +15,7 @@ dependencies = [
     "black>=25.1.0",
     "fastapi>=0.115.12",
     "modal>=1.0.3",
-    "pre-commit>=4.2.0",
+
     "pyright>=1.1.402",
     "pytest>=8.4.0",
     "rich>=14.0.0",
@@ -26,10 +26,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "flake8>=6.0.0",
-    "pre-commit>=3.0.0",
+
+    "pre-commit>=4.2.0",
 ]
 
 [build-system]
