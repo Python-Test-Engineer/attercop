@@ -47,4 +47,4 @@ repos:
         name: Python Script
         entry: python custom.py
         language: python
-        stages: [commit]
+        stages: [pre-commit]
