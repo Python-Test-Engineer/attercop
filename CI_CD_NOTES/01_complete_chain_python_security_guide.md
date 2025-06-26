@@ -28,7 +28,7 @@ This document provides a comprehensive plan for implementing code quality, typin
     - language: python
     - stages: [pre-commit]
     - *We can add other checks here if needed*
-
+- id: bandit
 
 ### Conventional Commit Messages
 
