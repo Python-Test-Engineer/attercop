@@ -26,6 +26,20 @@ repos:
   - repo: https://github.com/Yelp/detect-secrets
 ```
 
+### Dependency Management
+
+UV best with its --check and lock
+
+### Python versions
+
+If we do not have a testing suite, tox, nox, for python versions, developers can UV with different Python versions to do their regular testing.
+
+When it comes to GHA, we can do a matrix of Python versions.
+
+### Detect Secrets
+
+This needs a baseline file and may be cumbersome for devs. There are homemade versions that `grep` for common items and this may be sufficient. (`01_PRECOM MIT/secret_detection_hook.sh`)
+
 ## Pre-push Validation
 
 ### Comprehensive Testing
@@ -66,6 +80,10 @@ repos:
 - Upload coverage reports to services like Codecov or Coveralls
 - Set minimum coverage thresholds that must be met
 - Execute integration and end-to-end tests where applicable
+
+### Docker
+
+We can use Bandit and Docker Scout to test any images made.
 
 ## Deployment Gates
 
@@ -155,6 +173,9 @@ repos:
 - **Black**: Code formatting
 - **isort**: Import sorting
 - **flake8**: Linting and style checking
+
+- **RUFF**: Linting and style checking
+
 - **pylint**: Advanced static analysis
 - **mypy**: Static type checking
 
