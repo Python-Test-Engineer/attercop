@@ -8,7 +8,7 @@ words_to_search = ["password", "api_token", "secret"]
 results = []
 
 # Walk through the directory tree
-for root, dirs, files in os.walk("."):
+for root, dirs, files in os.walk("./src"):
     for file in files:
         # Open the file and read its contents
         try:
