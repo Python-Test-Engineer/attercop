@@ -1,30 +1,42 @@
 name: CI/CD Pipeline
-'on':
+"on":
   push:
     branches:
       - main
-
 
 # Prevent duplicate runs for PR pushes
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Separate jobs for different tasks in the CI/CD pipeline:
+# Dependency management
+# Python version management
+
+# List of jobs in the CI/CD pipeline:
+# 1. TESTS
+# 2. SECURITY BANDIT SAFETY PIP-AUDIT
+# 3. CODEQL
+# 4. LEAKS
+# 5. CALCULATE NEXT VERSION
+# 6. CREATE RELEASE
+
 jobs:
+  # TESTS
   test:
     name: Run Tests and Coverage
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version:
-          - '3.12'
+          - "3.12"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: 'Set up Python ${{ matrix.python-version }}'
+      - name: "Set up Python ${{ matrix.python-version }}"
         uses: actions/setup-python@v4
         with:
-          python-version: '${{ matrix.python-version }}'
+          python-version: "${{ matrix.python-version }}"
       - name: Install uv
         uses: astral-sh/setup-uv@v2
         with:
@@ -47,6 +59,7 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
+  # SECURITY
   security:
     name: Security Scans With Bandit
     runs-on: ubuntu-latest
@@ -56,7 +69,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - name: Install uv
         uses: astral-sh/setup-uv@v2
         with:
@@ -94,6 +107,8 @@ jobs:
             bandit-report.json
             safety-report.json
             pip-audit-report.json
+  # CODEQL
+  # This job runs CodeQL analysis to find vulnerabilities in the codebase.
   codeql:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
@@ -108,12 +123,14 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: python
-          queries: 'security-extended,security-and-quality'
+          queries: "security-extended,security-and-quality"
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
+  # LEAKS
+  # This job scans the repository for sensitive information using GitLeaks.
   scan:
     name: Check GitLeaks for Secrets
     runs-on: ubuntu-latest
@@ -124,7 +141,9 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+  # CALCULATE NEXT VERSION
+  # This job calculates the next semantic version based on commit messages.
+  # It analyzes the commit history since the last tag to determine if a version bump is needed
   semantic_release:
     name: Get Next Version
     needs: [test, security, codeql, scan]
@@ -273,18 +292,18 @@ jobs:
           else
             echo "No version bump needed"
           fi
-
+  # CREATE RELEASE
   create_release:
     name: Create GitHub Release
-    needs: [semantic_release]  # Assuming this gets the version from previous job
+    needs: [semantic_release] # Assuming this gets the version from previous job
     runs-on: ubuntu-latest
 
     # Only run if there's a new version to release
     if: needs.semantic_release.outputs.next-version != needs.semantic_release.outputs.current-version
 
     permissions:
-      contents: write  # Required for creating releases and pushing tags
-      pull-requests: write  # Required for some release operations
+      contents: write # Required for creating releases and pushing tags
+      pull-requests: write # Required for some release operations
 
     steps:
       - name: Checkout code
@@ -300,7 +319,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install GitPython
-
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -394,7 +412,6 @@ jobs:
           echo "- Author: ${{ steps.changelog-commit.outputs.commit_author }}"
           echo "- Date: ${{ steps.changelog-commit.outputs.commit_date }}"
           echo "- Message: ${{ steps.changelog-commit.outputs.commit_message }}"
-
 
       - name: Generate release notes
         id: release_notes
@@ -530,6 +547,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.semantic_release.outputs.next-version }}
-          files: ./dist/*  # Adjust path to your build artifacts
+          files: ./dist/* # Adjust path to your build artifacts
         # Only run if you have artifacts to upload
-        if: false  # Change to true if you want to upload artifacts
+        if: false # Change to true if you want to upload artifacts

@@ -6,14 +6,29 @@ This document provides a comprehensive plan for implementing code quality, typin
 ## Local Development (Pre-commit)
 
 ### Pre-commit Hook Configuration
-- Set up pre-commit hooks with Ruff for fomratting, sorting and linting
-- Include mypy for static type checking
-- Configure bandit for security vulnerability scanning
-- Add detect-secrets for credential detection (some dev configuration may be required) or use a homemade version.
-- Instead have custom python script that looks for "secrets", "API keys", etc.
-- `calculator.py` has a commented out SECRET test and it is set up in `pre-commit-config.yaml` with `secret_detection_hook.sh`
-- Run pytest with coverage reporting if we we have a test suite and use multiple versions of Python with Tox or Nox.
-- If not, developer can do run through with each version of Python on their local system.
+
+- Precommit hooks built in
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-yaml
+    - id: check-added-large-files
+    - id: check-merge-conflict
+    - id: debug-statements
+
+- id: pyright Pyright is a powerful, fast, and feature-packed static type checker explicitly designed for Python. It helps to ensure code quality, catch errors early, and boost productivity through static type checking.
+- id: ruff-check linter
+    args: [--fix]
+- id: ruff-format
+- id: conventional-pre-commit  ensures commit message is standardised
+  - stages: [commit-msg]
+- id: python-script LEAK DETECTION CUSTOM
+    - **enables easy dev change if needed.**
+    - name: Python Script
+    - entry: python custom.py
+    - language: python
+    - stages: [pre-commit]
+    - *We can add other checks here if needed*
+
 
 ### Conventional Commit Messages
 
@@ -22,6 +37,10 @@ This document provides a comprehensive plan for implementing code quality, typin
 ### Dependency Management
 
 UV best with its --check and lock features. uv.lock will pin everything down.
+
+This might be done in CI/CD
+
+We can use Tox to run tests across Python versions.
 
 
 ## CI/CD Pipeline (GitHub Actions)
@@ -56,29 +75,27 @@ We can use Bandit and Docker Scout to test any images made.
 
 We can run matric Python version for the Docerfile using arguments: --build-arg PYTHON_VERSION=3.9 etc `02_CI/DockerfileMultiple` and `02/cicd_pipeline.yaml`.
 
-
-
 ## Deployment Gates
 
 ### Quality Gates
+
+- Enable branch protection rules by restriciting who can push to main
+- Ensure there are protocols in place for code review and security alerts
+- Set up team permissions and access controls
 - Require all automated checks to pass before allowing merge
 - Set minimum code coverage thresholds (typically 80-90%)
 - Block deployment on any high-severity security vulnerabilities
 - Enforce mandatory code review approval alongside automated checks
 - Require up-to-date branches before merging
+- Use only PROD environment on main branch and only PR from deployable branch. This locks it down.
 - 4 eyes for a release and manual to start with
+- Always use environment variables for sensitive information and then echo out the variable rather than having ${{}} in the output.
 
 ## GitHub Security Best Practices
-
-### Repository Security Settings
-- Enable branch protection rules by restriciting who can push to main
-- Ensure there are protocols in place for code review and security alerts
-- Set up team permissions and access controls
 
 ### Access Control & Permissions
 - Use GitHub teams with least-privilege access principles
 - Enable two-factor authentication organization-wide as a requirement
-
 
 ### Secrets Management
 - Store all secrets in GitHub Secrets, never commit them to code or environment files
