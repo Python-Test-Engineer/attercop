@@ -2,6 +2,7 @@ repos:
   # Basic pre-commit hooks
   # These hooks check for common issues like trailing whitespace, end-of-file fixes, YAML validation, large files, and merge conflicts.
   # They help maintain code quality and prevent common mistakes in the codebase.
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -39,3 +40,11 @@ repos:
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      - id: scan-secrets
+        name: Scan for hardcoded secrets
+        entry: ./scan_secrets.sh
+        language: script
+        types: [python]
