@@ -6,52 +6,21 @@ This document provides a comprehensive plan for implementing code quality, typin
 ## Local Development (Pre-commit)
 
 ### Pre-commit Hook Configuration
-- Set up pre-commit hooks with black for code formatting
-- Configure isort for import sorting
-- Add flake8 for linting and style checking
+- Set up pre-commit hooks with Ruff for fomratting, sorting and linting
 - Include mypy for static type checking
 - Configure bandit for security vulnerability scanning
-- Add detect-secrets for credential detection
-- Run pytest with coverage reporting
+- Add detect-secrets for credential detection (some dev configuration may be required) or use a homemade version
+- Run pytest with coverage reporting if we we have a test suite and use multiple versions of Python with Tox or Nox.
+- If not, developer can do run through with each version of Python on their local system.
 
 ### Conventional Commit Messages
 
-This provides structure around what has been committed and can be used for versioning.
-
-### Development Environment Setup
-```yaml
-# .pre-commit-config.yaml example structure
-repos:
-  - repo: https://github.com/psf/black
-  - repo: https://github.com/pycqa/isort
-  - repo: https://github.com/pycqa/flake8
-  - repo: https://github.com/pre-commit/mirrors-mypy
-  - repo: https://github.com/PyCQA/bandit
-  - repo: https://github.com/Yelp/detect-secrets
-```
+- This provides structure around what has been committed and can be used for versioning.
 
 ### Dependency Management
 
-UV best with its --check and lock
+UV best with its --check and lock features. uv.lock will pin everything down.
 
-### Python versions
-
-If we do not have a testing suite, tox, nox, for python versions, developers can UV with different Python versions to do their regular testing.
-
-When it comes to GHA, we can do a matrix of Python versions.
-
-### Detect Secrets
-
-This needs a baseline file and may be cumbersome for devs. There are homemade versions that `grep` for common items and this may be sufficient. (`01_PRECOM MIT/secret_detection_hook.sh`)
-
-## Pre-push Validation
-
-### Comprehensive Testing
-- Execute full test suite with tox across multiple Python versions
-- Run comprehensive mypy type checking with strict configuration
-- Perform security audit with safety (dependency vulnerabilities) and bandit
-- Validate code formatting and import sorting compliance
-- Ensure all tests pass before allowing push to remote repository
 
 ## CI/CD Pipeline (GitHub Actions)
 
@@ -62,16 +31,13 @@ This needs a baseline file and may be cumbersome for devs. There are homemade ve
 
 ### Build Matrix Strategy
 - Set up matrix testing across Python versions (3.8, 3.9, 3.10, 3.11, 3.12)
-- Test across different operating systems (Ubuntu, Windows, macOS)
-- Install dependencies with caching for faster build times
+- Test across Ubuntu only.
+- Install dependencies with caching for faster build times.
 
-### Code Quality Checks
-- Run linting suite including flake8, pylint, and black --check
-- Execute type checking with mypy in strict mode
-- Validate import sorting with isort --check-only
-- Check code complexity and maintainability metrics
+### Code and Security Quality Checks
 
-### Security Scanning
+- Run Ruff, tests, CodeQL, Bandit in CI
+- Run mypy for static type checking
 - Perform security scans with bandit for common security issues
 - Run safety checks for known vulnerabilities in dependencies
 - Execute semgrep for additional security pattern detection
@@ -79,15 +45,16 @@ This needs a baseline file and may be cumbersome for devs. There are homemade ve
 - Check for dependency vulnerabilities with GitHub's dependency review
 
 ### Testing & Coverage
-- Run comprehensive test suite with pytest
-- Generate code coverage reports with coverage.py
-- Upload coverage reports to services like Codecov or Coveralls
-- Set minimum coverage thresholds that must be met
-- Execute integration and end-to-end tests where applicable
+
+- Run test suite with coverage if we have one.
 
 ### Docker
 
 We can use Bandit and Docker Scout to test any images made.
+
+We can run matric Python version for the Docerfile using arguments: --build-arg PYTHON_VERSION=3.9 etc `02_CI/DockerfileMultiple` and `02/cicd_pipeline.yaml`.
+
+
 
 ## Deployment Gates
 
@@ -97,22 +64,19 @@ We can use Bandit and Docker Scout to test any images made.
 - Block deployment on any high-severity security vulnerabilities
 - Enforce mandatory code review approval alongside automated checks
 - Require up-to-date branches before merging
+- 4 eyes for a release and manual to start with
 
 ## GitHub Security Best Practices
 
 ### Repository Security Settings
-- Enable branch protection rules with required status checks
-- Require signed commits for critical repositories
-- Enable vulnerability alerts and GitHub security advisories
-- Configure private vulnerability reporting for responsible disclosure
-- Set up dependency review to catch vulnerable dependencies in pull requests
+- Enable branch protection rules by restriciting who can push to main
+- Ensure there are protocols in place for code review and security alerts
+- Set up team permissions and access controls
 
 ### Access Control & Permissions
 - Use GitHub teams with least-privilege access principles
 - Enable two-factor authentication organization-wide as a requirement
-- Regularly audit repository collaborators and their permission levels
-- Use deploy keys instead of personal access tokens where possible
-- Implement SAML SSO for enterprise accounts and centralized identity management
+
 
 ### Secrets Management
 - Store all secrets in GitHub Secrets, never commit them to code or environment files
@@ -126,7 +90,6 @@ We can use Bandit and Docker Scout to test any images made.
 - Use dependency pinning in requirements files for reproducible builds
 - Sign releases and tags when possible for authenticity verification
 - Enable GitHub's dependency graph and security alerts
-- Use CodeQL or third-party Static Application Security Testing (SAST) tools in workflows
 - Implement Software Bill of Materials (SBOM) generation for transparency
 
 ### Workflow Security
@@ -136,6 +99,7 @@ We can use Bandit and Docker Scout to test any images made.
 - Validate all inputs in custom actions and reusable workflows
 - Use separate workflows for trusted vs untrusted code execution
 - Implement workflow approval requirements for sensitive operations
+- Use reusable workflows for common tasks and avoid duplication
 
 ### Monitoring & Incident Response
 - Set up security event notifications for suspicious activities
@@ -149,6 +113,7 @@ We can use Bandit and Docker Scout to test any images made.
 
 ### Phase 1: Local Development Setup
 - [ ] Configure pre-commit hooks
+- [ ] Secret detection setup
 - [ ] Set up local testing environment
 - [ ] Install and configure security scanning tools
 - [ ] Establish coding standards and style guides
@@ -174,12 +139,7 @@ We can use Bandit and Docker Scout to test any images made.
 ## Tools & Technologies Summary
 
 ### Code Quality Tools
-- **Black**: Code formatting
-- **isort**: Import sorting
-- **flake8**: Linting and style checking
-
 - **RUFF**: Linting and style checking
-
 - **pylint**: Advanced static analysis
 - **mypy**: Static type checking
 

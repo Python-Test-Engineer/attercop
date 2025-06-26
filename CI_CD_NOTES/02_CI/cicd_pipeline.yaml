@@ -41,22 +41,7 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt || echo "No dev requirements found"
 
-    # Static Code Analysis
-    - name: Run Black (Code Formatting Check)
-      run: |
-        pip install black
-        black --check --diff .
-
-    - name: Run isort (Import Sorting Check)
-      run: |
-        pip install isort
-        isort --check-only --diff .
-
-    - name: Run Flake8 (Linting)
-      run: |
-        pip install flake8 flake8-docstrings flake8-import-order
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    # Static Code Analysis RUFF
 
     - name: Run Pylint
       run: |
