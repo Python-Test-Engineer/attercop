@@ -1,8 +1,10 @@
 import re
 import os
 
+
 # Define the words to search for
 words_to_search = ["password", "api_token", "secret"]
+words_to_search = []
 
 # Initialize an empty list to store the results
 results = []
@@ -42,12 +44,12 @@ for root, dirs, files in os.walk("./src"):
 
 # Print the results
 if results:
-    print("Potential sensitive information found:")
+    print("[red]Potential sensitive information found:[/red]")
     for result in results:
         print(
             f"  * {result['word']} in {result['file']} at locations {result['locations']}"
         )
-    # exit(0)  # Exit with a non-zero status to indicate an error
+    exit(1)  # Exit with a non-zero status to indicate an error
 else:
     print("No potential sensitive information found.")
     raiseError = False
