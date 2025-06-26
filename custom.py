@@ -15,6 +15,8 @@ def search_secrets_in_file(filepath):
         for i, line in enumerate(file, start=1):
             if PATTERN.search(line):
                 print(f"{filepath}:{i}: {line.strip()}")
+            else:
+                print(f"{filepath}:{i}: No secrets found.")
 
 
 def scan_directory(directory):
