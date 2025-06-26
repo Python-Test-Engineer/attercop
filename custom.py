@@ -1,4 +1,4 @@
-"""Search for key words in the codebase"""
+"""Search for key words in the codebase and ERROR if found."""
 
 import os
 import re
@@ -6,7 +6,8 @@ import re
 START_FOLDER = "./src"  # Change this to your desired start folder
 # Define the words to search for
 words_to_search = ["password", "api_token", "secret"]
-file_types = [".js"]  # Add or remove file types as needed
+words_to_search = []
+file_types = [".py", ".js"]  # Add or remove file types as needed
 # words_to_search = []
 
 # Initialize an empty list to store the results
@@ -15,10 +16,12 @@ results = []
 # Walk through the directory tree
 for root, dirs, files in os.walk(START_FOLDER):
     for file in files:
-        # Open the file and read its contents
+        # Check if the file has one of the specified extensions
+        # If not, skip to the next file
         if not any(file.endswith(ext) for ext in file_types):
             continue
         try:
+            # Open the file and read its contents
             with open(
                 os.path.join(root, file), "r", encoding="utf-8", errors="ignore"
             ) as f:
@@ -54,6 +57,8 @@ if results:
         print(
             f"  * {result['word']} in {result['file']} at locations {result['locations']}"
         )
-    exit(1)  # Exit with a non-zero status to indicate an error
+    exit(
+        1
+    )  # Exit with a non-zero status to indicate an error and trigger pre-commit failure
 else:
     print("NO POTENTIAL sensitive information found.")
