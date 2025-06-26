@@ -14,6 +14,10 @@ This document provides a comprehensive plan for implementing code quality, typin
 - Add detect-secrets for credential detection
 - Run pytest with coverage reporting
 
+### Conventional Commit Messages
+
+This provides structure around what has been committed and can be used for versioning.
+
 ### Development Environment Setup
 ```yaml
 # .pre-commit-config.yaml example structure
