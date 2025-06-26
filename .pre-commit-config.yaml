@@ -43,9 +43,8 @@ repos:
 
   - repo: local
     hooks:
-      - id: custom-script-py
-        name: custom python script
-        description: Run a custom Python script to check for sensitive keywords in variable names.
+      - id: python-script
+        name: Python Script
         entry: python custom.py
         language: python
-        pass_filenames: false
+        stages: [commit]
