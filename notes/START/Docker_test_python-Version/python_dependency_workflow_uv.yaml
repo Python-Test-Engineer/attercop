@@ -1,0 +1,125 @@
+name: Python CI with UV Dependency Management
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install UV
+      - name: Install UV
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      # Set up Python with UV
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      # Cache UV dependencies
+      - name: Cache UV dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-${{ matrix.python-version }}-
+            ${{ runner.os }}-uv-
+
+      # Install dependencies with UV
+      - name: Install dependencies
+        run: |
+          uv sync --frozen --python ${{ matrix.python-version }}
+
+      # Verify lock file is up to date
+      - name: Verify lock file is current
+        run: |
+          uv lock --check
+
+    # Check for dependency conflicts
+### uv lock --check is UV version
+# This checks if the current lockfile (uv.lock) is up-to-date with the dependencies specified in your pyproject.toml. It will tell you if the lockfile needs to be regenerated due to changes in your project dependencies.
+# For a more comprehensive check of your project's dependency tree, you can also run:
+# bashuv tree
+# This displays the dependency tree of your project, making it easy to visualize which packages depend on what and spot potential issues
+###
+###
+python -m pip check verifies the compatibility of installed packages in your Python environment. It checks for:
+  # Missing dependencies - Packages that are installed but are missing required dependencies
+  # Version conflicts - Installed packages that have incompatible version requirements with other installed packages
+
+  # When you run it, pip examines all installed packages and their dependency specifications, then reports any issues it finds. If everything is compatible, it will output nothing and exit successfully. If there are problems, it will list them with details about which packages have issues and what dependencies are missing or conflicting.
+  # This is useful for troubleshooting installation problems, ensuring your environment is in a consistent state, or diagnosing why certain packages might not be working properly together.
+  # ###
+  - name: Check for dependency conflicts
+    run: |
+      uv run python -m pip check
+
+  # Generate dependency tree
+  - name: Generate dependency tree
+    run: |
+      uv tree > dependency-tree.txt
+      uv export --format requirements-txt > requirements.txt
+
+  # Upload dependency artifacts
+  - name: Upload dependency reports
+    uses: actions/upload-artifact@v4
+    with:
+      name: dependency-reports-${{ matrix.python-version }}
+      path: |
+        dependency-tree.txt
+        requirements.txt
+        uv.lock
+
+  # Run linting
+  - name: Run linting
+    run: |
+      uv run black --check .
+      uv run flake8 .
+
+  # Run tests
+  - name: Run tests
+    run: |
+      uv run pytest tests/ --verbose --cov=src --cov-report=xml
+
+  # Upload coverage
+  - name: Upload coverage to Codecov
+    uses: codecov/codecov-action@v3
+    with:
+      file: ./coverage.xml
+
+security-audit:
+  runs-on: ubuntu-latest
+
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Install UV
+      uses: astral-sh/setup-uv@v3
+
+    - name: Install dependencies
+      run: uv sync --frozen
+
+    # Security audit with pip-audit
+    - name: Security audit
+      run: |
+        uv add --dev pip-audit
+        uv run pip-audit --format=json --output=security-report.json
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report
+        path: security-report.json

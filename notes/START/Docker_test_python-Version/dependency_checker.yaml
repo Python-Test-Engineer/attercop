@@ -48,14 +48,33 @@ jobs:
       run: |
         uv lock --check
 
+
     # Check for dependency conflicts
+
+  # uv lock --check is UV version
+  # This checks if the current lockfile (uv.lock) is up-to-date with the dependencies specified in your pyproject.toml. It will tell you if the lockfile needs to be regenerated due to changes in your project dependencies.
+  # For a more comprehensive check of your project's dependency tree, you can also run:
+  # bashuv tree
+  # This displays the dependency tree of your project, making it easy to visualize which packages depend on what and spot potential issues
+
+  # python -m pip check verifies the compatibility of installed packages in your Python environment. It checks for:
+
+  # Missing dependencies - Packages that are installed but are missing required dependencies
+  # Version conflicts - Installed packages that have incompatible version requirements with other installed packages
+
+  # When you run it, pip examines all installed packages and their dependency specifications, then reports any issues it finds. If everything is compatible, it will output nothing and exit successfully. If there are problems, it will list them with details about which packages have issues and what dependencies are missing or conflicting.
+  # This is useful for troubleshooting installation problems, ensuring your environment is in a consistent state, or diagnosing why certain packages might not be working properly together.
+
+
     - name: Check for dependency conflicts
       run: |
         uv run python -m pip check
 
+
     # Generate dependency tree
     - name: Generate dependency tree
       run: |
+        # uv lock --check
         uv tree > dependency-tree.txt
         uv export --format requirements-txt > requirements.txt
 
@@ -108,4 +127,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: security-report
-        path
+        # path
