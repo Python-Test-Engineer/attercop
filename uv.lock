@@ -153,6 +153,7 @@ dependencies = [
     { name = "pre-commit" },
     { name = "pyright" },
     { name = "pytest" },
+    { name = "rich" },
     { name = "ruff" },
     { name = "uvicorn" },
 ]
@@ -179,6 +180,7 @@ requires-dist = [
     { name = "pyright", specifier = ">=1.1.401" },
     { name = "pytest", specifier = ">=8.4.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
+    { name = "rich", specifier = ">=14.0.0" },
     { name = "ruff", specifier = ">=0.11.13" },
     { name = "uvicorn", specifier = ">=0.34.3" },
 ]

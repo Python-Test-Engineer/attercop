@@ -1,5 +1,9 @@
 """Simple calculator implementation."""
 
+# TEST
+secret_key = "super_secret_key"  # Example of a secret key, not used in calculations
+print(f"This is a secret key{secret_key}, but it won't be used in calculations.")
+
 
 class Calculator:
     """A basic calculator class."""
@@ -26,13 +30,7 @@ class Calculator:
         Returns:
             Difference of a and b
         """
-        # TEST
-        secret_key = (
-            "super_secret_key"  # Example of a secret key, not used in calculations
-        )
-        print(
-            f"This is a secret key{secret_key}, but it won't be used in calculations."
-        )
+
         return a - b
 
     def multiply(self, a: float, b: float) -> float:
