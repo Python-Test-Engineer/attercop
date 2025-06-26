@@ -1,6 +1,6 @@
 import os
 
-START_FOLDER = "src"  # Change this to your desired start folder
+START_FOLDER = "./src"  # Change this to your desired start folder
 SEARCH_TERMS = ["secrets", "api_key", "password"]
 FILE_EXTENSIONS = [".py", ".js"]  # Add or remove extensions as needed
 

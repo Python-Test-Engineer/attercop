@@ -6,7 +6,7 @@ import re
 
 # Define the words to search for
 words_to_search = ["password", "api_token", "secret"]
-words_to_search = []
+# words_to_search = []
 
 # Initialize an empty list to store the results
 results = []
