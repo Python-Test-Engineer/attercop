@@ -1,5 +1,7 @@
-import re
+"""Search for key words in the codebase"""
+
 import os
+import re
 
 
 # Define the words to search for
