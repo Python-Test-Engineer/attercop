@@ -34,7 +34,7 @@ This document provides a comprehensive plan for implementing code quality, typin
 
 - This provides structure around what has been committed and can be used for versioning.
 
-### Dependency Management
+### Dependency Management TO DO
 
 UV best with its --check and lock features. uv.lock will pin everything down.
 
