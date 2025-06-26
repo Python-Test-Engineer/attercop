@@ -55,13 +55,6 @@ changelog_file = "CHANGELOG.md"
 name = "origin"
 type = "github"
 
-[tool.black]
-line-length = 88
-target-version = ['py38']
-
-[tool.isort]
-profile = "black"
-line_length = 88
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
