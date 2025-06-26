@@ -1,31 +1,51 @@
-import os
 import re
+import os
 
-# Folder to search
-SRC_FOLDER = "src"
+# Define the words to search for
+words_to_search = ["password", "api_token", "secret"]
 
+# Initialize an empty list to store the results
+results = []
 
-print(f"Scanning folder: {SRC_FOLDER}")
-# Regex pattern to match secret_key and password assignments
-PATTERN = re.compile(r'\b(secret_key|password)\b\s*=\s*["\'].*["\']', re.IGNORECASE)
+# Walk through the directory tree
+for root, dirs, files in os.walk("."):
+    for file in files:
+        # Open the file and read its contents
+        try:
+            with open(
+                os.path.join(root, file), "r", encoding="utf-8", errors="ignore"
+            ) as f:
+                contents = f.read()
+        except UnicodeDecodeError:
+            # If the file can't be decoded as UTF-8, try reading it as binary
+            with open(os.path.join(root, file), "rb") as f:
+                contents = f.read().decode("utf-8", errors="ignore")
 
+            # If the file is binary, skip it
+            if not contents.isalpha():
+                continue
 
-def search_secrets_in_file(filepath):
-    with open(filepath, "r", encoding="utf-8", errors="ignore") as file:
-        for i, line in enumerate(file, start=1):
-            if PATTERN.search(line):
-                print(f"{filepath}:{i}: {line.strip()}")
-            else:
-                print(f"{filepath}:{i}: No secrets found.")
+        # Search for the words in the file contents
+        for word in words_to_search:
+            matches = re.findall(
+                r"\b" + re.escape(word) + r"\b", contents, re.IGNORECASE
+            )
+            if matches:
+                # Add the matches to the results list
+                results.append(
+                    {
+                        "file": os.path.join(root, file),
+                        "word": word,
+                        "locations": [contents.index(match) for match in matches],
+                    }
+                )
 
-
-def scan_directory(directory):
-    for root, _, files in os.walk(directory):
-        for filename in files:
-            if filename.endswith(".py"):
-                full_path = os.path.join(root, filename)
-                search_secrets_in_file(full_path)
-
-
-if __name__ == "__main__":
-    scan_directory(SRC_FOLDER)
+# Print the results
+if results:
+    print("Potential sensitive information found:")
+    for result in results:
+        print(
+            f"  * {result['word']} in {result['file']} at locations {result['locations']}"
+        )
+else:
+    print("No potential sensitive information found.")
