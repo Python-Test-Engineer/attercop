@@ -3,18 +3,21 @@
 import os
 import re
 
-
+START_FOLDER = "./src"  # Change this to your desired start folder
 # Define the words to search for
-# words_to_search = []
 words_to_search = ["password", "api_token", "secret"]
+file_types = [".js"]  # Add or remove file types as needed
+# words_to_search = []
 
 # Initialize an empty list to store the results
 results = []
 
 # Walk through the directory tree
-for root, dirs, files in os.walk("./src"):
+for root, dirs, files in os.walk(START_FOLDER):
     for file in files:
         # Open the file and read its contents
+        if not any(file.endswith(ext) for ext in file_types):
+            continue
         try:
             with open(
                 os.path.join(root, file), "r", encoding="utf-8", errors="ignore"

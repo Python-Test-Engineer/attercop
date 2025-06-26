@@ -43,8 +43,8 @@ repos:
 
   - repo: local
     hooks:
-      - id: python-script-2
+      - id: python-script
         name: Python Script
-        entry: python custom2.py
+        entry: python custom.py
         language: python
         stages: [pre-commit]
