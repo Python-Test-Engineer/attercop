@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Secret Detection Pre-commit Hook
 # Add new patterns to the PATTERNS array below

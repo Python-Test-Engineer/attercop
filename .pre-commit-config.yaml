@@ -29,6 +29,17 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
+  # Your secret detection hook
+  - repo: local
+    hooks:
+      - id: secret-detection
+        name: Secret Detection Scanner
+        entry: ./secret_detection_hook.sh
+        language: script
+        files: '\.(py|js|ts|jsx|tsx|json|yaml|yml|env|cfg|conf|config|ini|toml|sh|bash|zsh|fish|php|rb|go|java|scala|kt|cs|cpp|c|h|hpp|rs|swift|dart|sql|xml|html|css|scss|sass|tf|tfvars|hcl)$|^(Dockerfile|Makefile|Rakefile)$'
+        exclude: '\.git/|\.secrets\.baseline|package-lock\.json|poetry\.lock|yarn\.lock|\.min\.js|\.map$'
+        pass_filenames: true
+        stages: [commit]
   # Conventional commit message validation
   # This hook checks commit messages against the conventional commit format so that we can use semantic versioning dynamically.
   # It requires the commit message to start with a type (e.g., feat, fix, chore) followed by a scope and a description.

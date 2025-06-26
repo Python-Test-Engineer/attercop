@@ -5,7 +5,7 @@ on:
 
 jobs:
   call-reusable-build:
-    uses: Python-Test-Engineer/gha/.github/workflows/01_reuseable_build.yml@main
+    uses: Python-Test-Engineer/attercop/.github/workflows/01_reuseable_build.yml@main
     with:
       environment: 'production'
       node-version: '20'
