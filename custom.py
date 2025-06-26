@@ -47,5 +47,7 @@ if results:
         print(
             f"  * {result['word']} in {result['file']} at locations {result['locations']}"
         )
+    raiseError = True
 else:
     print("No potential sensitive information found.")
+    raiseError = False
