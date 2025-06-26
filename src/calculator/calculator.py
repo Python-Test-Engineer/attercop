@@ -26,6 +26,10 @@ class Calculator:
         Returns:
             Difference of a and b
         """
+        # SECRET_KEY = (
+        #     "super_secret_key"  # Example of a secret key, not used in calculations
+        # )
+        # print("This is a secret key, but it won't be used in calculations.")
         return a - b
 
     def multiply(self, a: float, b: float) -> float:
