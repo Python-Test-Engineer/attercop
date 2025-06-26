@@ -27,10 +27,12 @@ class Calculator:
             Difference of a and b
         """
         # TEST
-        # SECRET_KEY = (
-        #     "super_secret_key"  # Example of a secret key, not used in calculations
-        # )
-        # print("This is a secret key, but it won't be used in calculations.")
+        secret_key = (
+            "super_secret_key"  # Example of a secret key, not used in calculations
+        )
+        print(
+            f"This is a secret key{secret_key}, but it won't be used in calculations."
+        )
         return a - b
 
     def multiply(self, a: float, b: float) -> float:

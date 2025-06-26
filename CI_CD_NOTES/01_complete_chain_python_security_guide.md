@@ -9,7 +9,8 @@ This document provides a comprehensive plan for implementing code quality, typin
 - Set up pre-commit hooks with Ruff for fomratting, sorting and linting
 - Include mypy for static type checking
 - Configure bandit for security vulnerability scanning
-- Add detect-secrets for credential detection (some dev configuration may be required) or use a homemade version
+- Add detect-secrets for credential detection (some dev configuration may be required) or use a homemade version.
+- `calculator.py` has a commented out SECRET test and it is set up in `pre-commit-config.yaml` with `secret_detection_hook.sh`
 - Run pytest with coverage reporting if we we have a test suite and use multiple versions of Python with Tox or Nox.
 - If not, developer can do run through with each version of Python on their local system.
 
