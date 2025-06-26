@@ -12,14 +12,15 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
+    "bandit>=1.8.5",
     "black>=25.1.0",
     "fastapi>=0.115.12",
     "modal>=1.0.3",
-
     "pyright>=1.1.402",
     "pytest>=8.4.0",
     "rich>=14.0.0",
     "ruff>=0.11.13",
+    "safety>=3.5.2",
     "uvicorn>=0.34.3",
 ]
 
@@ -36,7 +37,12 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "src/calculator/_version.py"
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
+skips = ["B101"]  # Skip assert_used test
 
+[tool.bandit.assert_used]
+skips = ["*_test.py", "*/test_*.py"]
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 version_variables = ["src/calculator/__init__.py:__version__"]
