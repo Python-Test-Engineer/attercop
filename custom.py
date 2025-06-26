@@ -4,7 +4,6 @@ import re
 # Folder to search
 START_FOLDER = "./src"
 
-
 # Keywords to search for in variable names (wild match, case-insensitive)
 KEYWORDS = ["secret", "password", "api"]
 
