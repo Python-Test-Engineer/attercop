@@ -42,6 +42,5 @@ def print_results():
         print("No sensitive-like assignments found.")
 
 
-if __name__ == "__main__":
-    scan_directory(START_FOLDER)
-    print_results()
+scan_directory(START_FOLDER)
+print_results()
