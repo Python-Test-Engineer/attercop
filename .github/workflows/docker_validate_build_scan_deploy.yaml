@@ -108,7 +108,7 @@ jobs:
         uses: actions/checkout@v4
       - name: 📦 build image
         run: |
-          docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
+          docker build ./src/calculator/ -t integratedaisolutions/calculator-app
           echo "✅ Docker image built successfully"
 
   security-scan:
@@ -128,14 +128,14 @@ jobs:
       - name: Rebuild Docker image for scanning
         run: |
           echo "🔄 Rebuilding image for security scanning..."
-          docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
+          docker build ./src/calculator/ -t integratedaisolutions/calculator-app
           echo "✅ Image rebuilt for scanning"
 
       # Run Trivy vulnerability scanner - comprehensive security scanning
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'iwswordpress/calculator-app:latest'
+          image-ref: 'integratedaisolutions/calculator-app'
           format: 'sarif'
           output: '${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
@@ -152,7 +152,7 @@ jobs:
       - name: Run Trivy scanner for readable output
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'iwswordpress/calculator-app:latest'
+          image-ref: 'integratedaisolutions/calculator-app'
           format: 'table'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'
@@ -161,7 +161,7 @@ jobs:
       - name: Scan for secrets in Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'iwswordpress/calculator-app:latest'
+          image-ref: 'integratedaisolutions/calculator-app'
           format: 'json'
           output: '${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json'
           scanners: 'secret'
@@ -175,7 +175,7 @@ jobs:
           echo "🔍 Running Docker Scout analysis..."
           # Install Docker Scout if available
           if command -v docker scout &> /dev/null; then
-            docker scout cves iwswordpress/calculator-app:latest --format sarif --output ${{ env.SCAN_RESULTS_DIR }}/scout-results.sarif || echo "Docker Scout scan completed with findings"
+            docker scout cves integratedaisolutions/calculator-app --format sarif --output ${{ env.SCAN_RESULTS_DIR }}/scout-results.sarif || echo "Docker Scout scan completed with findings"
             echo "✅ Docker Scout scan completed"
           else
             echo "ℹ️ Docker Scout not available, skipping..."
@@ -187,7 +187,7 @@ jobs:
           echo "📊 Security Scan Summary" > ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
           echo "=========================" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
           echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
-          echo "**Image:** iwswordpress/calculator-app:latest" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Image:** integratedaisolutions/calculator-app" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
           echo "**Scan Date:** $(date)" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
           echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
 
@@ -214,7 +214,7 @@ jobs:
           echo "========================"
 
           # Get image details
-          docker images iwswordpress/calculator-app:latest --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+          docker images integratediasolutions/calculator-app --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
 
           # Basic optimization recommendations
           echo ""
@@ -273,26 +273,26 @@ jobs:
       - name: Rebuild Docker image for deployment
         run: |
           echo "🔄 Rebuilding image for deployment..."
-          docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
+          docker build ./src/calculator/ -t integratedaisolutions/calculator-app
           echo "✅ Image rebuilt for deployment"
 
       - name: Push Docker image to Docker Hub
         run: |
           echo "🚀 Pushing image to Docker Hub..."
-          docker push iwswordpress/calculator-app:latest
+          docker push integratedaisolutions/calculator-app
           echo "✅ Image successfully pushed to Docker Hub"
 
       - name: Generate deployment summary
         run: |
           echo "📦 Deployment Summary"
           echo "===================="
-          echo "**Image:** iwswordpress/calculator-app:latest"
+          echo "**Image:** integratedaisolutions/calculator-app"
           echo "**Registry:** Docker Hub"
           echo "**Deployment Date:** $(date)"
           echo "**Status:** ✅ Successfully deployed"
           echo ""
           echo "**Image Details:**"
-          docker images iwswordpress/calculator-app:latest --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+          docker images integratedaisolutions/calculator-app --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
           echo ""
           echo "🎉 Your calculator application is now available on Docker Hub!"
-          echo "You can pull it using: docker pull iwswordpress/calculator-app:latest"
+          echo "You can pull it using: docker pull integratedaisolutions/calculator-app"
