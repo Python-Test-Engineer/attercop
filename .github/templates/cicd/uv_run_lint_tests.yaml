@@ -1,4 +1,4 @@
-name: Terminus CI/CD
+name: UV Lint and Test
 
 on:
   workflow_dispatch:

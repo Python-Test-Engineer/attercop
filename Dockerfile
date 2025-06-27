@@ -1,41 +1,21 @@
-# Use Python 3.12 slim image for efficiency
-FROM python:3.12-slim
+# Use an official Python runtime as a parent image
+FROM python:3.12-slim:latest
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv for fast dependency management
-RUN pip install uv
-
-# Set working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy dependency files first for better caching
-COPY pyproject.toml requirements.txt uv.lock ./
-COPY uv.config.json ./
+# Copy the current directory contents into the container at /app
+COPY src /app
 
-# Install dependencies using uv
-RUN uv sync
+# Install any needed packages specified in requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
-# Copy source code
-COPY src/ ./src/
-COPY main.py ./
+# Make port 8000 available to the world outside this container
+EXPOSE 8000
 
-# Add src to Python path so imports work correctly
-ENV PYTHONPATH=/app/src
+# Define environment variable
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Create a non-root user for security
-RUN useradd --create-home --shell /bin/bash app && \
-    chown -R app:app /app
-USER app
-
-# Default command runs the tests
-CMD ["python", "-m", "pytest", "src/tests/", "-v"]
+# Run uvicorn when the container launches
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

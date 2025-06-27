@@ -1,0 +1,49 @@
+name: UV Lint and Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: '3.13'
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: 🧠 Restore uv cache
+        id: cache-uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: 📦 Install dependencies (lint)
+        run: uv sync
+
+      - name: ✨ Lint with Ruff
+        run: |
+            uv run ruff check --output-format=github .
+
+      - name: ✅ Run tests
+        run: uv run pytest src/tests/
+        continue-on-error: true  # Make strict if critical
+      - name: ✅ Run Calculation
+        run: uv run src/calculator/calculator.py
+        continue-on-error: true  # Make strict if critical)

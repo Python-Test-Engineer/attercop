@@ -1,8 +1,10 @@
 """Simple calculator implementation."""
 
 # TEST
-secret_key = "super_secret_key"  # Example of a secret key, not used in calculations
-print(f"This is a secret key{secret_key}, but it won't be used in calculations.")
+# secret_key = "super_secret_key"
+# SECRET_API = "https://api.example.com/secret"
+# print(f"This is a secret_key {secret_key}, but it won't be used in calculations.")
+# print(f"This is a SECRET_API {SECRET_API}, but it won't be used in calculations.")
 
 
 class Calculator:
@@ -63,3 +65,15 @@ class Calculator:
         print("final")
 
         return a / b
+
+
+if __name__ == "__main__":
+    # Example usage
+    calc = Calculator()
+    print("Addition:", calc.add(5, 3))
+    print("Subtraction:", calc.subtract(5, 3))
+    print("Multiplication:", calc.multiply(5, 3))
+    try:
+        print("Division:", calc.divide(5, 0))  # This will raise an error
+    except ValueError as e:
+        print(e)
