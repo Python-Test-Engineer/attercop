@@ -106,26 +106,29 @@ jobs:
               echo "❌ Calculator service not found in docker-compose.yaml"
               exit 1
           fi
-      # Validate that we can build your docker-compose setup
-      # This ensures our security scans will work with your actual configuration
-      - name: Validate docker-compose configuration
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate docker-compose.yaml
         run: |
           echo "Validating docker-compose.yaml..."
-
           # Check if docker-compose file is valid
-          docker-compose config > /tmp/compose-validated.yaml
+          docker compose config > /tmp/compose-validated.yaml
           echo "✅ Docker Compose configuration is valid"
-
           # Display the services we'll be working with
           echo "📋 Services defined in docker-compose:"
-          docker-compose config --services
-
+          docker compose config --services
           # Check if our main calculator service is properly defined
-          if docker-compose config --services | grep -q "calculator"; then
-            echo "✅ Calculator service found"
+          if docker compose config --services | grep -q "calculator"; then
+              echo "✅ Calculator service found"
           else
-            echo "❌ Calculator service not found in docker-compose.yaml"
-            exit 1
+              echo "❌ Calculator service not found in docker-compose.yaml"
+              exit 1
           fi
 
   # Job 2: Comprehensive Secret Scanning
