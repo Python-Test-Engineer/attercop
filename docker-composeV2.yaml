@@ -1,0 +1,103 @@
+services:
+  # Main calculator application service
+  calculator:
+    # Build from our Dockerfile in the current directory
+    build: .
+    # Renamed container to be more specific about its role
+    container_name: calculator_production
+    # Mount the current directory to /app for live code changes during development
+    # This means you can edit files on your host machine and see changes immediately
+    volumes:
+      - .:/app
+    # Keep container running so we can execute commands inside it
+    # Run the calculator application directly - this will execute the example usage
+    # from the if __name__ == "__main__" block in calculator.py
+    command: python src/calculator/calculator.py
+    # Set environment variables
+    environment:
+      - PYTHONPATH=/app/src
+      # This ensures Python output is shown immediately (not buffered)
+      - PYTHONUNBUFFERED=1
+    # Create a network so services can communicate
+    networks:
+      - calculator_network
+
+  # Service for running tests - install pytest only when needed
+  calculator_test:
+    build: .
+    container_name: calculator_test
+    volumes:
+      - .:/app
+    # Install pytest and then run tests - this keeps the main image lightweight
+    command: sh -c "pip install pytest && python -m pytest src/tests/ -v"
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+
+  # Optional: Service for interactive development
+  # You can use this to get a shell inside the container for debugging
+  # calculator_dev:
+  #   build: .
+  #   container_name: calculator_dev
+  #   volumes:
+  #     - .:/app
+  #   user: root
+  #   # Install all dependencies including development ones
+  #   command: >
+  #     sh -c "
+  #       uv sync &&
+  #       echo 'Development environment ready. Use docker exec to access.' &&
+  #       tail -f /dev/null
+  #     "
+  #   environment:
+  #     - PYTHONPATH=/app/src
+  #     - PYTHONUNBUFFERED=1
+  #   networks:
+  #     - calculator_network
+
+  # Azure deployment service - simple teaching example
+  # This demonstrates how you might automate deployment to Azure
+  deploy_azure:
+    # Use the official Azure CLI image which has all Azure tools pre-installed
+    image: mcr.microsoft.com/azure-cli:latest
+    container_name: azure_deploy
+    # Simple deployment simulation - just echoes what would happen
+    command: >
+      sh -c "
+        echo '=== Azure Deployment Started ===' &&
+        echo 'Step 1: Authenticating with Azure...' &&
+        echo 'Step 2: Creating resource group: calculator-rg' &&
+        echo 'Step 3: Creating App Service plan...' &&
+        echo 'Step 4: Creating web app: calculator-demo' &&
+        echo 'Step 5: Deploying application code...' &&
+        echo 'Step 6: Configuring environment variables...' &&
+        echo '=== Deployment Complete ===' &&
+        echo 'Your app is available at: https://calculator-demo.azurewebsites.net' &&
+        echo 'Deployment logs saved. Container will remain running for inspection.'
+      "
+    # Dummy Azure credentials - NEVER use real credentials like this in production!
+    # In real scenarios, use Azure Key Vault, environment files, or CI/CD secrets
+    environment:
+      - AZURE_CLIENT_ID=12345678-1234-1234-1234-123456789012
+      - AZURE_CLIENT_SECRET=fake-secret-for-demo-only
+      - AZURE_TENANT_ID=87654321-4321-4321-4321-210987654321
+      - AZURE_SUBSCRIPTION_ID=abcdef12-3456-7890-abcd-ef1234567890
+      - AZURE_RESOURCE_GROUP=calculator-rg
+      - AZURE_APP_NAME=calculator-demo
+      - AZURE_LOCATION=eastus
+    # Mount source code so the deploy service can access it
+    volumes:
+      - .:/workspace:ro
+    networks:
+      - calculator_network
+
+# Create a custom network for our services
+# This allows services to communicate using service names as hostnames
+networks:
+  calculator_network:
+    driver: bridge
+
+# Optional: Create volumes for persistent data
+# Useful if your calculator needs to store data between runs
+volumes:
+  calculator_data:

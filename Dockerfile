@@ -1,21 +1,21 @@
-# Use an official Python runtime as a parent image
-FROM python:3.12-slim:latest
+# Simple Dockerfile for the calculator application
+# We're using Python 3.11 slim for a lightweight but functional base
+FROM python:3.12-alpine
 
-# Set the working directory in the container
+
+# Set our working directory inside the container
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY src /app
+# Copy everything from our project into the container
+# Since your calculator is self-contained, we don't need complex dependency management
+COPY . .
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
 
-# Define environment variable
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Set the Python path so Python can find our calculator module
+# This is much simpler than complex path manipulation
+ENV PYTHONPATH=/app/src
 
-# Run uvicorn when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# For the main calculator, we don't need pytest at all
+# We'll handle test dependencies separately in docker-compose
+CMD ["python", "src/calculator/calculator.py"]

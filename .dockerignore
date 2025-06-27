@@ -1,9 +1,17 @@
-# Git files
-.git
-.gitignore
-.github/
+# Docker ignore file - prevents these files from being copied into the Docker image
+# This keeps your Docker images smaller and prevents sensitive information from being included
 
-# IDE and editor files
+# Git files - not needed in production
+.git/
+.gitignore
+.gitattributes
+
+# Documentation files - usually not needed in production containers
+README.md
+*.md
+docs/
+
+# Development and IDE files
 .vscode/
 .idea/
 *.swp
@@ -33,6 +41,17 @@ wheels/
 *.egg
 MANIFEST
 
+# Testing and coverage files
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
 # Virtual environments
 .env
 .venv
@@ -42,25 +61,13 @@ ENV/
 env.bak/
 venv.bak/
 
-# Testing and coverage
-.coverage
-.pytest_cache/
-.tox/
-.nox/
-htmlcov/
-.coverage.*
-coverage.xml
-*.cover
-.hypothesis/
+# Docker files themselves (prevents recursive copying)
+Dockerfile
+docker-compose.yml
+.dockerignore
 
-# Documentation
-docs/
-*.md
-!README.md
-
-# CI/CD and project notes
-CI_CD_NOTES/
-CHANGELOG.md
+# Log files
+*.log
 
 # OS generated files
 .DS_Store
@@ -74,13 +81,13 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
-*.log
 
-# Development tools
-.pre-commit-config.yaml
-scan_secrets.py
-
-# Docker files (avoid recursive copying)
-Dockerfile
-.dockerignore
-docker-compose*.yml
+# Security - prevent accidentally including sensitive files
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+.secrets
+.env.local
+.env.production

@@ -1,0 +1,35 @@
+
+services:
+  # Main calculator application service
+  calculator:
+    # Build from our Dockerfile in the current directory
+    build: .
+    # Give the container a meaningful name
+    container_name: calculator_app
+    # Mount the current directory to /app for live code changes during development
+    # This means you can edit files on your host machine and see changes immediately
+    volumes:
+      - .:/app
+    # Keep container running so we can execute commands inside it
+    # Run the calculator application directly - this will execute the example usage
+    # from the if __name__ == "__main__" block in calculator.py
+    command: python src/calculator/calculator.py
+    # Set environment variables
+    environment:
+      - PYTHONPATH=/app/src
+      # This ensures Python output is shown immediately (not buffered)
+      - PYTHONUNBUFFERED=1
+    # Create a network so services can communicate
+    networks:
+      - calculator_network
+
+# Create a custom network for our services
+# This allows services to communicate using service names as hostnames
+networks:
+  calculator_network:
+    driver: bridge
+
+# Optional: Create volumes for persistent data
+# Useful if your calculator needs to store data between runs
+volumes:
+  calculator_data:
