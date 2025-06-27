@@ -1,4 +1,4 @@
-name: UV Lint, Test & Calculation
+name: UV Lint, Test, Matrix & Calculation
 # This workflow runs linting, tests, and a calculation script using uv.
 
 on:

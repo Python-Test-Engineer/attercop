@@ -34,40 +34,20 @@ This document provides a comprehensive plan for implementing code quality, typin
 
 - This provides structure around what has been committed and can be used for versioning.
 
-### Dependency Management TO DO
-
-UV best with its --check and lock features. uv.lock will pin everything down.
-
-This might be done in CI/CD
-
-We can use Tox to run tests across Python versions.
-
 
 ## CI/CD Pipeline (GitHub Actions)
 
-### Workflow Triggers
-- Trigger automated checks on pull requests to main/develop branches
-- Execute pipeline on pushes to main branch
-- Schedule periodic security scans for dependency updates
 
 ### Build Matrix Strategy
-- Set up matrix testing across Python versions (3.8, 3.9, 3.10, 3.11, 3.12)
+- Set up matrix testing across Python versions (3.9, 3.10, 3.11, 3.12)
 - Test across Ubuntu only.
 - Install dependencies with caching for faster build times.
 
 ### Code and Security Quality Checks
 
-- Run Ruff, tests, CodeQL, Bandit in CI
-- Run mypy for static type checking
-- Perform security scans with bandit for common security issues
-- Run safety checks for known vulnerabilities in dependencies
-- Execute semgrep for additional security pattern detection
+- Run Ruff, MyPy/Pyright, Unit tests/Coverage, CodeQL, Bandit in CI
 - Scan for secrets and credentials in commit history and codebase
-- Check for dependency vulnerabilities with GitHub's dependency review
-
-### Testing & Coverage
-
-- Run test suite with coverage if we have one.
+- Check for dependency vulnerabilities with GitHub's dependency review TO DO
 
 ### Docker
 
