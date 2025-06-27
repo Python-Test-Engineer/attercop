@@ -23,14 +23,14 @@ COPY pyproject.toml requirements.txt uv.lock ./
 COPY uv.config.json ./
 
 # Install dependencies using uv
-RUN uv pip install --system -r requirements.txt
+RUN uv sync
 
 # Copy source code
 COPY src/ ./src/
 COPY main.py ./
 
 # Add src to Python path so imports work correctly
-ENV PYTHONPATH=/app/src:$PYTHONPATH
+ENV PYTHONPATH=/app/src
 
 # Create a non-root user for security
 RUN useradd --create-home --shell /bin/bash app && \

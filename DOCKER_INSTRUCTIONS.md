@@ -47,7 +47,7 @@ docker run --rm calculator-app python -m pytest src/tests/ -vv
 # Run a specific test file
 docker run --rm calculator-app python -m pytest src/tests/test_calculator.py -v
 
-# Run tests with coverage reporting
+# Run tests with coverage reporting (if coverage is installed)
 docker run --rm calculator-app python -m pytest src/tests/ --cov=calculator --cov-report=term-missing
 ```
 
@@ -71,7 +71,7 @@ python -m pytest src/tests/test_calculator.py::TestCalculator::test_add -v
 To work with your local code changes without rebuilding the image:
 
 ```bash
-# Mount the src directory as a volume
+# Mount the src directory as a volume (Linux/Mac)
 docker run --rm -v "$(pwd)/src:/app/src" calculator-app
 
 # For Windows PowerShell:
@@ -95,14 +95,14 @@ docker run --rm -v "%cd%/src:/app/src" calculator-app
 ### Python Environment
 - Python 3.12 runtime
 - All project dependencies installed
-- Proper PYTHONPATH configuration for imports
+- Proper PYTHONPATH configuration for imports (`/app/src`)
 
 ## Troubleshooting
 
 ### Import Errors
 If you encounter import errors, ensure the PYTHONPATH is correctly set. The Dockerfile sets:
 ```
-ENV PYTHONPATH=/app/src:$PYTHONPATH
+ENV PYTHONPATH=/app/src
 ```
 
 ### Permission Issues
@@ -114,6 +114,9 @@ If you modify `requirements.txt` or `pyproject.toml`, rebuild the Docker image:
 docker build -t calculator-app . --no-cache
 ```
 
+### UV Installation Issues
+If you encounter issues with `uv pip install`, ensure your `requirements.txt` is properly formatted and all dependencies are available.
+
 ## Advanced Usage
 
 ### Running Other Commands
@@ -124,16 +127,21 @@ You can override the default command to run other operations:
 # Run the main application
 docker run --rm calculator-app python main.py
 
-# Run linting
+# Run linting (if ruff is available)
 docker run --rm calculator-app python -m ruff check src/
 
-# Run type checking (if mypy is installed)
-docker run --rm calculator-app python -m mypy src/
+# Access Python REPL
+docker run --rm -it calculator-app python
 ```
 
-### Multi-stage Builds
+### Build Arguments
 
-The current Dockerfile is optimized for testing. For production deployments, consider creating a multi-stage build to reduce the final image size.
+You can customize the build process with build arguments:
+
+```bash
+# Build with a different Python version (modify Dockerfile accordingly)
+docker build -t calculator-app --build-arg PYTHON_VERSION=3.11 .
+```
 
 ## Example Test Output
 
@@ -152,3 +160,21 @@ src/tests/test_calculator.py::TestCalculator::test_divide PASSED [ 80%]
 src/tests/test_calculator.py::TestCalculator::test_divide_by_zero PASSED [100%]
 
 ========================= 5 passed in 0.xx seconds =========================
+```
+
+## Quick Start Commands
+
+Here's a summary of the most common commands:
+
+```bash
+# Build the image
+docker build -t calculator-app .
+
+# Run tests
+docker run --rm calculator-app
+
+# Interactive development
+docker run --rm -it calculator-app bash
+
+# Run with local code mounted
+docker run --rm -v "$(pwd)/src:/app/src" calculator-app
