@@ -1,22 +1,9 @@
-# Complete Security and Quality Workflow for Calculator Application
-# This workflow is specifically designed to work with the calculator app's docker-compose setup
-# It demonstrates how to integrate security scanning with your actual development workflow
-name: Calculator Security Pipeline
+name: CDocker Build Calculator Application
 
-# Comprehensive trigger strategy to catch security issues at multiple stages
 on:
-#   # Protect your main branch by scanning every push
-#   push:
-#     branches: [ main, master ]
-#   # Prevent vulnerable code from being merged through PR scanning
-#   pull_request:
-#     branches: [ main, master ]
-#   # Enable manual security audits when needed
+
   workflow_dispatch:
 
-
-# Security-first permissions following principle of least privilege
-# Each permission serves a specific purpose in our security pipeline
 permissions:
   contents: read          # Read repository code and configuration
   security-events: write  # Upload security scan results to GitHub Security tab
@@ -24,8 +11,7 @@ permissions:
   checks: write          # Update PR status checks
   actions: read          # Access workflow run information
 
-# Environment variables that apply to all jobs
-# These help maintain consistency across different scanning tools
+
 env:
   # Use the same Python version as your application for accurate dependency scanning
   PYTHON_VERSION: '3.12'
@@ -35,8 +21,6 @@ env:
   SCAN_RESULTS_DIR: security-results
 
 jobs:
-  # Job 1: Application Setup and Validation
-  # This job mirrors your docker-compose setup to ensure we're scanning the right thing
   application-setup:
     name: 🔧 Application Setup & Validation
     runs-on: ubuntu-latest
@@ -126,9 +110,3 @@ jobs:
         run: |
           docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
           echo "✅ Docker image built successfully"
-
-      # - name: push image to docker hub
-      #   run: |
-      #     docker login -u rishabkumar7 -p ${{ secrets.DOCKER_HUB_TOKEN }}
-      #     docker push rishabkumar7/devops-qr-code-backend:latest
-      #     docker push rishabkumar7/devops-qr-code-frontend:latest
