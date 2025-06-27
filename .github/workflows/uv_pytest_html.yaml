@@ -57,7 +57,7 @@ jobs:
           - "3.12"
           - "3.11"
           - "3.10"
-          - "3.9"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -74,7 +74,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install -e .
-          uv pip install pytest pytest-html pytest-cov pytest-xdist
+          uv pip install pytest pytest-html
       - name: Run tests with pytest
         run: |
           source .venv/bin/activate
