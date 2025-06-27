@@ -4,15 +4,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read # Read repository code and configuration
-  security-events: write # Upload security scan results to GitHub Security tab
-  pull-requests: write # Comment on PRs with security findings
-  checks: write # Update PR status checks
-  actions: read # Access workflow run information
+  contents: read          # Read repository code and configuration
+  security-events: write  # Upload security scan results to GitHub Security tab
+  pull-requests: write    # Comment on PRs with security findings
+  checks: write          # Update PR status checks
+  actions: read          # Access workflow run information
 
 env:
   # Use the same Python version as your application for accurate dependency scanning
-  PYTHON_VERSION: "3.12"
+  PYTHON_VERSION: '3.12'
   # Docker image name that matches your docker-compose setup
   IMAGE_NAME: calculator
   # Set consistent scan output directory
@@ -135,37 +135,37 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "iwswordpress/calculator-app:latest"
-          format: "sarif"
-          output: "${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif"
-          severity: "CRITICAL,HIGH,MEDIUM"
-          exit-code: "0" # Don't fail the build on vulnerabilities, just report them
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'sarif'
+          output: '${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'  # Don't fail the build on vulnerabilities, just report them
 
       # Upload Trivy results to GitHub Security tab
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: "${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif"
+          sarif_file: '${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif'
 
       # Run Trivy in table format for readable output in logs
       - name: Run Trivy scanner for readable output
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "iwswordpress/calculator-app:latest"
-          format: "table"
-          severity: "CRITICAL,HIGH,MEDIUM"
-          exit-code: "0"
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'
 
       # Scan for secrets in the image
       - name: Scan for secrets in Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "iwswordpress/calculator-app:latest"
-          format: "json"
-          output: "${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json"
-          scanners: "secret"
-          exit-code: "0"
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'json'
+          output: '${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json'
+          scanners: 'secret'
+          exit-code: '0'
 
       # Run Docker Scout (if available) for additional insights
       - name: Docker Scout CVE scanning
