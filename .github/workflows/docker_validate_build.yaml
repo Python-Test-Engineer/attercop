@@ -1,17 +1,17 @@
 name: Calculator App CI/CD
 
 on:
-#   push:
-#     branches: [ main, develop ]
-#   pull_request:
-#     branches: [ main ]
-    workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
 env:
   IMAGE_NAME: calculator-app
   REGISTRY: ghcr.io
 
 jobs:
-  build-test:
+  build-test-scan:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,14 +77,7 @@ jobs:
         # Clean up
         docker stop calculator-test
         docker rm calculator-test
-  scan:
-    runs-on: ubuntu-latest
-    needs: build-test
-    permissions:
-      contents: read
-      packages: write
-      security-events: write
-    steps:
+
     - name: Basic Security Scan - Check for known vulnerabilities
       run: |
         IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
