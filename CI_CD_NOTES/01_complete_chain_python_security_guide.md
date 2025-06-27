@@ -34,14 +34,16 @@ This document provides a comprehensive plan for implementing code quality, typin
 
 - This provides structure around what has been committed and can be used for versioning.
 
-
 ## CI/CD Pipeline (GitHub Actions)
 
+<img src="../images/lint-test-matrix-security-1.png">
+<img src="../images/lint-test-matrix-security-2.png">
 
 ### Build Matrix Strategy
-- Set up matrix testing across Python versions (3.9, 3.10, 3.11, 3.12)
+- Set up matrix testing across Python versions (3.9, 3.10, 3.11, 3.12).
 - Test across Ubuntu only.
 - Install dependencies with caching for faster build times.
+- Download Pytest-HTML reports.
 
 ### Code and Security Quality Checks
 
@@ -51,9 +53,11 @@ This document provides a comprehensive plan for implementing code quality, typin
 
 ### Docker
 
-We can use Bandit and Docker Scout to test any images made.
+<img src="../images/docker-build-scan-push.png">
 
-We can run matric Python version for the Docerfile using arguments: --build-arg PYTHON_VERSION=3.9 etc `02_CI/DockerfileMultiple` and `02/cicd_pipeline.yaml`.
+We use Trivy and Docker Scout, inbuilt in GitHub Actions, to scan Docker images for vulnerabilities and secrets, with a downloadable report.
+
+We can run matric Python version for the Dockerfile using arguments: --build-arg PYTHON_VERSION=3.9 etc `02_CI/DockerfileMultiple` and `02/cicd_pipeline.yaml`.
 
 ## Deployment Gates
 
