@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: 📦 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Validate docker-compose.yaml
@@ -104,7 +104,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
-      - name: build image
+      - name: 📦 build image
         run: |
           docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
           echo "✅ Docker image built successfully"
