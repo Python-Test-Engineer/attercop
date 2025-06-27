@@ -5,8 +5,52 @@ import re
 
 START_FOLDER = "./src"  # Change this to your desired start folder
 # Define the words to search for
-# words_to_search = ["password", "api_token", "secret"]
+
+words_to_search = [
+    "access_key",
+    "access_token",
+    "api_key",
+    "apikey",
+    "auth_token",
+    "aws_access_key_id",
+    "aws_secret_access_key",
+    "azure_client_secret",
+    "bearer_token",
+    "cert",
+    "certificate",
+    "client_id",
+    "client_secret",
+    "connection_string",
+    "database_url",
+    "db_password",
+    "db_user",
+    "dsn",
+    "firebase_api_key",
+    "gcp_credentials",
+    "keystore",
+    "mongo_uri",
+    "passwd",
+    "password",
+    "pem",
+    "pfx",
+    "private_key",
+    "public_key",
+    "refresh_token",
+    "secret",
+    "secret_key",
+    "settings",
+    "sha_key",
+    "slack_token",
+    "sqlalchemy_database_uri",
+    "ssh_key",
+    "token",
+    "truststore",
+    "twilio_sid",
+    "twilio_token",
+]
+
 words_to_search = []
+
 file_types = [".py", ".js"]  # Add or remove file types as needed
 # words_to_search = []
 
