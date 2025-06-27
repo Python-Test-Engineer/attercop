@@ -5,7 +5,7 @@ import re
 
 START_FOLDER = "./src"  # Change this to your desired start folder
 # Define the words to search for
-words_to_search = ["password", "api_token", "secret"]
+# words_to_search = ["password", "api_token", "secret"]
 words_to_search = []
 file_types = [".py", ".js"]  # Add or remove file types as needed
 # words_to_search = []
