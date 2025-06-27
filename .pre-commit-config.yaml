@@ -43,9 +43,9 @@ repos:
 
   - repo: local
     hooks:
-      - id: python-script
-        name: Python Script
-        entry: python custom.py
+      - id: scan_secrets_id
+        name: Scan for leaks
+        entry: python scan_secrets.py
         language: python
         stages: [pre-commit]
 
