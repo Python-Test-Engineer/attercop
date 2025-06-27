@@ -1,4 +1,4 @@
-name: CDocker Build Calculator Application
+name: Docker Validate Build Scan Calculator Application
 
 on:
 
