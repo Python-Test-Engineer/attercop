@@ -42,7 +42,7 @@ jobs:
     - name: Run container tests
       run: |
         # Get the first tag from the metadata output
-        IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+        IMAGE_TAG=$(echo "$attercop" | head -n1)
 
         # Start the container in background
         docker run -d --name calculator-test $IMAGE_TAG
