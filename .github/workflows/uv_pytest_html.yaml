@@ -1,5 +1,4 @@
-name: UV Lint, Test, Matrix, Security
-# This workflow runs linting, tests, and a calculation script using uv.
+name: UV Pytest HTML Report
 
 on:
   workflow_dispatch:
