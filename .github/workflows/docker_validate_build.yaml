@@ -48,11 +48,12 @@ jobs:
       with:
         context: ./src/calculator
         push: false
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        # tags: ${{ steps.meta.outputs.tags }}
+        tags: attercop
+        # labels: ${{ steps.meta.outputs.labels }}
         load: true
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        # cache-from: type=gha
+        # cache-to: type=gha,mode=max
 
     - name: Run container tests
       run: |
