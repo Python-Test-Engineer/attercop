@@ -80,7 +80,7 @@ jobs:
 
         # Run pytest with multiple output formats
         # The beauty of uv is that all dependencies are already properly resolved
-        pytest \
+        pytest ./src/tests/ \
           --cov=src \
           --cov=your_package_name \
           --cov-report=html:reports/htmlcov \
