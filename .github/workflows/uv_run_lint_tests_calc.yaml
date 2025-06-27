@@ -1,4 +1,5 @@
-name: UV Lint and Test
+name: UV Lint, Test & Calculation
+# This workflow runs linting, tests, and a calculation script using uv.
 
 on:
   workflow_dispatch:
