@@ -1,11 +1,11 @@
 name: Calculator App CI/CD
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main ]
+  workflow_dispatch:
 env:
   IMAGE_NAME: calculator-app
   REGISTRY: ghcr.io
