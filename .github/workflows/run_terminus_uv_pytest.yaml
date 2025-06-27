@@ -42,5 +42,5 @@ jobs:
             uv run ruff check --output-format=github .
 
       - name: ✅ Run tests
-        run: uv run pytest tsrc/ests/
+        run: uv run pytest src/tests/
         continue-on-error: true  # Make strict if critical
