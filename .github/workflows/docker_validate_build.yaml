@@ -1,4 +1,4 @@
-name: Calculator App CI/CD
+name: Docker Validate Build
 
 on:
 #   push:
