@@ -65,7 +65,7 @@ jobs:
 
     - name: Basic Security Scan - Check for known vulnerabilities
       run: |
-        IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+        IMAGE_TAG=$(echo "attercop" | head -n1)
 
         # Check for common security issues using docker history
         echo "=== Checking Docker image layers ==="
@@ -77,7 +77,7 @@ jobs:
 
     - name: Basic Security Scan - File system check
       run: |
-        IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+        IMAGE_TAG=$(echo "attercop" | head -n1)
 
         # Create temporary container to inspect filesystem
         CONTAINER_ID=$(docker create $IMAGE_TAG)
@@ -97,7 +97,7 @@ jobs:
 
     - name: Basic Security Scan - Network and user check
       run: |
-        IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+        IMAGE_TAG=$(echo "attercop" | head -n1)
 
         # Check what user the container runs as
         echo "=== Checking container user ==="
@@ -114,7 +114,7 @@ jobs:
 
     - name: Generate security report
       run: |
-        IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+        IMAGE_TAG=$(echo "attercop" | head -n1)
 
         echo "# Security Scan Report" > security-report.md
         echo "**Image:** $IMAGE_TAG" >> security-report.md
@@ -145,8 +145,8 @@ jobs:
       with:
         context: ./src/calculator
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: attercop
+
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
