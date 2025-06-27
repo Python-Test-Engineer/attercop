@@ -1,0 +1,298 @@
+name: Docker Build Scan Push Calculator Application
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read          # Read repository code and configuration
+  security-events: write  # Upload security scan results to GitHub Security tab
+  pull-requests: write    # Comment on PRs with security findings
+  checks: write          # Update PR status checks
+  actions: read          # Access workflow run information
+
+env:
+  # Use the same Python version as your application for accurate dependency scanning
+  PYTHON_VERSION: '3.12'
+  # Docker image name that matches your docker-compose setup
+  IMAGE_NAME: calculator
+  # Set consistent scan output directory
+  SCAN_RESULTS_DIR: security-results
+
+jobs:
+  application-setup:
+    name: 🔧 Application Setup & Validation
+    runs-on: ubuntu-latest
+    outputs:
+      # Share information about the application structure with other jobs
+      has-requirements: ${{ steps.check-deps.outputs.has-requirements }}
+      has-dockerfile: ${{ steps.check-deps.outputs.has-dockerfile }}
+      python-version: ${{ steps.check-deps.outputs.python-version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Analyze your project structure to understand dependencies and configuration
+      # This helps us tailor the security scans to your specific setup
+      - name: Analyze project structure
+        id: check-deps
+        run: |
+          echo "Analyzing calculator application structure..."
+
+          # Check for different types of dependency files
+          if [ -f "requirements.txt" ]; then
+            echo "has-requirements=requirements.txt" >> $GITHUB_OUTPUT
+            echo "📦 Found requirements.txt"
+          elif [ -f "pyproject.toml" ]; then
+            echo "has-requirements=pyproject.toml" >> $GITHUB_OUTPUT
+            echo "📦 Found pyproject.toml"
+          else
+            echo "has-requirements=none" >> $GITHUB_OUTPUT
+            echo "⚠️ No dependency file found"
+          fi
+
+          # Verify Dockerfile exists (needed for container scanning)
+          if [ -f "Dockerfile" ]; then
+            echo "has-dockerfile=true" >> $GITHUB_OUTPUT
+            echo "🐳 Found Dockerfile"
+          else
+            echo "has-dockerfile=false" >> $GITHUB_OUTPUT
+            echo "❌ No Dockerfile found"
+          fi
+
+          # Extract Python version from various sources
+          if [ -f "pyproject.toml" ] && grep -q "python" pyproject.toml; then
+            python_version=$(grep -o 'python.*=.*"[^"]*"' pyproject.toml | grep -o '"[^"]*"' | tail -1 | tr -d '"' | grep -o '[0-9]\+\.[0-9]\+' | head -1)
+            echo "python-version=${python_version:-3.11}" >> $GITHUB_OUTPUT
+          else
+            echo "python-version=3.11" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+  validate:
+    name: ☑️ Validate Docker Compose
+    runs-on: ubuntu-latest
+    needs: application-setup
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📦 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate docker-compose.yaml
+        run: |
+          echo "Validating docker-compose.yaml..."
+          # Check if docker-compose file is valid
+          docker compose config > /tmp/compose-validated.yaml
+          echo "✅ Docker Compose configuration is valid"
+          # Display the services we'll be working with
+          echo "📋 Services defined in docker-compose:"
+          docker compose config --services
+          # Check if our main calculator service is properly defined
+          if docker compose config --services | grep -q "calculator"; then
+              echo "✅ Calculator service found"
+          else
+              echo "❌ Calculator service not found in docker-compose.yaml"
+              exit 1
+          fi
+
+  build:
+    name: 🐳 Build Docker Image
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: 📦 build image
+        run: |
+          docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
+          echo "✅ Docker image built successfully"
+
+  security-scan:
+    name: 🔍 Docker Image Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Create directory for scan results
+      - name: Create scan results directory
+        run: mkdir -p ${{ env.SCAN_RESULTS_DIR }}
+
+      # Rebuild the image locally for scanning (since we can't pass images between jobs easily)
+      - name: Rebuild Docker image for scanning
+        run: |
+          echo "🔄 Rebuilding image for security scanning..."
+          docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
+          echo "✅ Image rebuilt for scanning"
+
+      # Run Trivy vulnerability scanner - comprehensive security scanning
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'sarif'
+          output: '${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'  # Don't fail the build on vulnerabilities, just report them
+
+      # Upload Trivy results to GitHub Security tab
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: '${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif'
+
+      # Run Trivy in table format for readable output in logs
+      - name: Run Trivy scanner for readable output
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'
+
+      # Scan for secrets in the image
+      - name: Scan for secrets in Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'json'
+          output: '${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json'
+          scanners: 'secret'
+          exit-code: '0'
+
+      # Run Docker Scout (if available) for additional insights
+      - name: Docker Scout CVE scanning
+        id: docker-scout
+        continue-on-error: true
+        run: |
+          echo "🔍 Running Docker Scout analysis..."
+          # Install Docker Scout if available
+          if command -v docker scout &> /dev/null; then
+            docker scout cves iwswordpress/calculator-app:latest --format sarif --output ${{ env.SCAN_RESULTS_DIR }}/scout-results.sarif || echo "Docker Scout scan completed with findings"
+            echo "✅ Docker Scout scan completed"
+          else
+            echo "ℹ️ Docker Scout not available, skipping..."
+          fi
+
+      # Generate security summary report
+      - name: Generate security summary
+        run: |
+          echo "📊 Security Scan Summary" > ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "=========================" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Image:** iwswordpress/calculator-app:latest" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Scan Date:** $(date)" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+
+          # Check if secrets were found
+          if [ -f "${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json" ]; then
+            secret_count=$(jq '.Results[]?.Secrets // [] | length' ${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json 2>/dev/null | paste -sd+ | bc 2>/dev/null || echo "0")
+            echo "**Secrets Found:** $secret_count" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          fi
+
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Scan Tools Used:**" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "- Trivy (Vulnerabilities & Secrets)" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "- Docker Scout (CVE Analysis)" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Results uploaded to GitHub Security tab for detailed analysis.**" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+
+          # Display summary in workflow logs
+          cat ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+
+      # Check image size and optimization recommendations
+      - name: Analyze image size and optimization
+        run: |
+          echo "🔍 Docker Image Analysis"
+          echo "========================"
+
+          # Get image details
+          docker images iwswordpress/calculator-app:latest --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+
+          # Basic optimization recommendations
+          echo ""
+          echo "💡 Image Optimization Tips:"
+          echo "- Consider using multi-stage builds to reduce image size"
+          echo "- Use .dockerignore to exclude unnecessary files"
+          echo "- Consider using alpine or distroless base images"
+          echo "- Remove package managers and unnecessary tools in production images"
+
+      # Archive all scan results
+      - name: Archive security scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: ${{ env.SCAN_RESULTS_DIR }}
+          retention-days: 30
+
+      # Fail the job if critical vulnerabilities are found (optional)
+      - name: Check for critical vulnerabilities
+        run: |
+          echo "🔍 Checking for critical security issues..."
+
+          # Check if there are critical vulnerabilities in SARIF file
+          if [ -f "${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif" ]; then
+            critical_count=$(jq '[.runs[].results[] | select(.level == "error")] | length' ${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif 2>/dev/null || echo "0")
+            echo "Critical vulnerabilities found: $critical_count"
+
+            # Uncomment the next lines if you want to fail the build on critical vulnerabilities
+            # if [ "$critical_count" -gt "0" ]; then
+            #   echo "❌ Critical vulnerabilities found! Please review and fix before deployment."
+            #   exit 1
+            # fi
+          fi
+
+          echo "✅ Security scan completed successfully"
+
+  deploy:
+    name: 🚀 Deploy to Docker Hub
+    runs-on: ubuntu-latest
+    needs: security-scan
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Rebuild Docker image for deployment
+        run: |
+          echo "🔄 Rebuilding image for deployment..."
+          docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
+          echo "✅ Image rebuilt for deployment"
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          echo "🚀 Pushing image to Docker Hub..."
+          docker push iwswordpress/calculator-app:latest
+          echo "✅ Image successfully pushed to Docker Hub"
+
+      - name: Generate deployment summary
+        run: |
+          echo "📦 Deployment Summary"
+          echo "===================="
+          echo "**Image:** iwswordpress/calculator-app:latest"
+          echo "**Registry:** Docker Hub"
+          echo "**Deployment Date:** $(date)"
+          echo "**Status:** ✅ Successfully deployed"
+          echo ""
+          echo "**Image Details:**"
+          docker images iwswordpress/calculator-app:latest --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+          echo ""
+          echo "🎉 Your calculator application is now available on Docker Hub!"
+          echo "You can pull it using: docker pull iwswordpress/calculator-app:latest"

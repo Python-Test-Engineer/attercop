@@ -43,7 +43,7 @@ jobs:
           uv run ruff check --output-format=github .
 
       - name: ✅ Run tests
-        run: uv run pytest src/tests/
+        run: uv run pytest tests/
         continue-on-error: true # Make strict if critical
       - name: ✅ Run Calculation
         run: uv run src/calculator/calculator.py
