@@ -45,7 +45,7 @@ This document provides a comprehensive plan for implementing code quality, typin
 
 ### Code and Security Quality Checks
 
-- Run Ruff, MyPy/Pyright, Unit tests/Coverage, CodeQL, Bandit in CI
+- Run Ruff, MyPy/Pyright, Unit tests/Coverage, CodeQL, Bandit, Safety,Pip-audit in CI
 - Scan for secrets and credentials in commit history and codebase
 - Check for dependency vulnerabilities with GitHub's dependency review TO DO
 
