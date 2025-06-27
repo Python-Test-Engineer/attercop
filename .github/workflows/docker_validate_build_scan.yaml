@@ -1,7 +1,6 @@
-name: Docker Validate Build Scan Calculator Application
+name: Docker Build Calculator Application
 
 on:
-
   workflow_dispatch:
 
 permissions:
@@ -10,7 +9,6 @@ permissions:
   pull-requests: write    # Comment on PRs with security findings
   checks: write          # Update PR status checks
   actions: read          # Access workflow run information
-
 
 env:
   # Use the same Python version as your application for accurate dependency scanning
@@ -70,7 +68,6 @@ jobs:
             echo "python-version=3.11" >> $GITHUB_OUTPUT
           fi
 
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -99,6 +96,7 @@ jobs:
               echo "❌ Calculator service not found in docker-compose.yaml"
               exit 1
           fi
+
   build:
     runs-on: ubuntu-latest
     needs: validate
@@ -106,7 +104,148 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
-      - name: build imag
+      - name: build image
         run: |
           docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
           echo "✅ Docker image built successfully"
+
+  security-scan:
+    name: 🔍 Docker Image Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Create directory for scan results
+      - name: Create scan results directory
+        run: mkdir -p ${{ env.SCAN_RESULTS_DIR }}
+
+      # Rebuild the image locally for scanning (since we can't pass images between jobs easily)
+      - name: Rebuild Docker image for scanning
+        run: |
+          echo "🔄 Rebuilding image for security scanning..."
+          docker build ./src/calculator/ -t iwswordpress/calculator-app:latest
+          echo "✅ Image rebuilt for scanning"
+
+      # Run Trivy vulnerability scanner - comprehensive security scanning
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'sarif'
+          output: '${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'  # Don't fail the build on vulnerabilities, just report them
+
+      # Upload Trivy results to GitHub Security tab
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: '${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif'
+
+      # Run Trivy in table format for readable output in logs
+      - name: Run Trivy scanner for readable output
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'table'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '0'
+
+      # Scan for secrets in the image
+      - name: Scan for secrets in Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'iwswordpress/calculator-app:latest'
+          format: 'json'
+          output: '${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json'
+          scanners: 'secret'
+          exit-code: '0'
+
+      # Run Docker Scout (if available) for additional insights
+      - name: Docker Scout CVE scanning
+        id: docker-scout
+        continue-on-error: true
+        run: |
+          echo "🔍 Running Docker Scout analysis..."
+          # Install Docker Scout if available
+          if command -v docker scout &> /dev/null; then
+            docker scout cves iwswordpress/calculator-app:latest --format sarif --output ${{ env.SCAN_RESULTS_DIR }}/scout-results.sarif || echo "Docker Scout scan completed with findings"
+            echo "✅ Docker Scout scan completed"
+          else
+            echo "ℹ️ Docker Scout not available, skipping..."
+          fi
+
+      # Generate security summary report
+      - name: Generate security summary
+        run: |
+          echo "📊 Security Scan Summary" > ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "=========================" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Image:** iwswordpress/calculator-app:latest" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Scan Date:** $(date)" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+
+          # Check if secrets were found
+          if [ -f "${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json" ]; then
+            secret_count=$(jq '.Results[]?.Secrets // [] | length' ${{ env.SCAN_RESULTS_DIR }}/secrets-scan.json 2>/dev/null | paste -sd+ | bc 2>/dev/null || echo "0")
+            echo "**Secrets Found:** $secret_count" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          fi
+
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Scan Tools Used:**" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "- Trivy (Vulnerabilities & Secrets)" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "- Docker Scout (CVE Analysis)" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+          echo "**Results uploaded to GitHub Security tab for detailed analysis.**" >> ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+
+          # Display summary in workflow logs
+          cat ${{ env.SCAN_RESULTS_DIR }}/security-summary.md
+
+      # Check image size and optimization recommendations
+      - name: Analyze image size and optimization
+        run: |
+          echo "🔍 Docker Image Analysis"
+          echo "========================"
+
+          # Get image details
+          docker images iwswordpress/calculator-app:latest --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+
+          # Basic optimization recommendations
+          echo ""
+          echo "💡 Image Optimization Tips:"
+          echo "- Consider using multi-stage builds to reduce image size"
+          echo "- Use .dockerignore to exclude unnecessary files"
+          echo "- Consider using alpine or distroless base images"
+          echo "- Remove package managers and unnecessary tools in production images"
+
+      # Archive all scan results
+      - name: Archive security scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: ${{ env.SCAN_RESULTS_DIR }}
+          retention-days: 30
+
+      # Fail the job if critical vulnerabilities are found (optional)
+      - name: Check for critical vulnerabilities
+        run: |
+          echo "🔍 Checking for critical security issues..."
+
+          # Check if there are critical vulnerabilities in SARIF file
+          if [ -f "${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif" ]; then
+            critical_count=$(jq '[.runs[].results[] | select(.level == "error")] | length' ${{ env.SCAN_RESULTS_DIR }}/trivy-results.sarif 2>/dev/null || echo "0")
+            echo "Critical vulnerabilities found: $critical_count"
+
+            # Uncomment the next lines if you want to fail the build on critical vulnerabilities
+            # if [ "$critical_count" -gt "0" ]; then
+            #   echo "❌ Critical vulnerabilities found! Please review and fix before deployment."
+            #   exit 1
+            # fi
+          fi
+
+          echo "✅ Security scan completed successfully"
