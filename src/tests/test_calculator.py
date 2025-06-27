@@ -1,5 +1,6 @@
 """Tests for the calculator module."""
 
+# type: ignore
 import pytest
 
 from calculator import Calculator

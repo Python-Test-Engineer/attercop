@@ -2,6 +2,9 @@
     "pyright": {
         "ignore": [
             "src/modal_app.py"
+        ],
+        "extraPaths": [
+            "./src/tests"
         ]
     }
 }
