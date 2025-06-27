@@ -1,0 +1,88 @@
+name: UV Lint, Test & Calculation
+# This workflow runs linting, tests, and a calculation script using uv.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: 🧠 Restore uv cache
+        id: cache-uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: 📦 Install dependencies (lint)
+        run: uv sync
+
+      - name: ✨ Lint with Ruff
+        run: |
+          uv run ruff check --output-format=github .
+
+      - name: ✅ Run tests
+        run: uv run pytest src/tests/
+        continue-on-error: true # Make strict if critical
+      - name: ✅ Run Calculation
+        run: uv run src/calculator/calculator.py
+        continue-on-error: true # Make strict if critical)
+  matrix-tests:
+    name: Run Tests and Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.12"
+          - "3.11"
+          - "3.10"
+          - "3.9"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: latest
+      - name: Create virtual environment
+        run: uv venv
+      - name: Install dependencies
+        run: |
+          uv pip install -e .
+          uv pip install pytest pytest-cov pytest-xdist
+      - name: Run tests with pytest
+        run: |
+          source .venv/bin/activate
+          pytest --cov=attercop --cov-report=xml --cov-report=term-missing -v
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
