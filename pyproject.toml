@@ -16,10 +16,10 @@ dependencies = [
     "black>=25.1.0",
     "fastapi>=0.115.12",
     "modal>=1.0.3",
+    "mypy>=1.16.1",
     "pip-audit>=2.9.0",
     "pip-tools>=7.4.1",
     "pre-commit>=4.2.0",
-
     "rich>=14.0.0",
     "ruff>=0.11.13",
     "safety>=3.5.2",
