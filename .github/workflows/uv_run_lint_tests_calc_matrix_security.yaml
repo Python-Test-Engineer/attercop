@@ -137,7 +137,7 @@ jobs:
   # CODEQL
   # This job runs CodeQL analysis to find vulnerabilities in the codebase.
   codeql:
-    name: CodeQL Analysis
+    name: 🔒🛡️🚨CodeQL Analysis
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -159,7 +159,7 @@ jobs:
   # LEAKS
   # This job scans the repository for sensitive information using GitLeaks.
   scan:
-    name: Check GitLeaks for Secrets
+    name: 🔒🛡️🚨 Check GitLeaks for Secrets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
